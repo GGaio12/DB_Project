@@ -1,4 +1,3 @@
-import psycopg2
 from DB_Connection import db_connect
 
 db = db_connect()
