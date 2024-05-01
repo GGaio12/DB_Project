@@ -7,10 +7,10 @@ def db_connect():
     '''
     decoded_pass = 0
     db = psycopg2.connect(
-        user = '',
+        user = 'user123',
         password = int(decoded_pass),
         host = '127.0.0.1',
         port = '1234',
-        database = ''
+        database = 'test321'
     )
     return db
