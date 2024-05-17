@@ -71,13 +71,13 @@ CREATE TABLE registation (
 );
 
 CREATE TABLE prescription (
-	prescription_id	 SERIAL,
-	medicine_medicine_id INTEGER NOT NULL,
+	prescription_id SERIAL,
 	PRIMARY KEY(prescription_id)
 );
 
 CREATE TABLE medicine (
 	medicine_id SERIAL,
+	dosage	 CHAR(255),
 	PRIMARY KEY(medicine_id)
 );
 
@@ -113,13 +113,6 @@ CREATE TABLE contract (
 	PRIMARY KEY(contract_id)
 );
 
-CREATE TABLE dosage (
-	dosage_id		 SERIAL,
-	amount		 FLOAT(8) NOT NULL,
-	medicine_medicine_id INTEGER,
-	PRIMARY KEY(dosage_id,medicine_medicine_id)
-);
-
 CREATE TABLE surgerytypes (
 	sur_type_ip SERIAL,
 	name	 VARCHAR(512) NOT NULL,
@@ -130,6 +123,12 @@ CREATE TABLE specialization_specialization (
 	specialization_spec_id	 INTEGER,
 	specialization_spec_id1 INTEGER NOT NULL,
 	PRIMARY KEY(specialization_spec_id)
+);
+
+CREATE TABLE medicine_prescription (
+	medicine_medicine_id	 INTEGER,
+	prescription_prescription_id INTEGER,
+	PRIMARY KEY(medicine_medicine_id,prescription_prescription_id)
 );
 
 CREATE TABLE equip_surgery_appointment_prescription (
@@ -170,14 +169,14 @@ ALTER TABLE equip_surgery_appointment ADD CONSTRAINT equip_surgery_appointment_f
 ALTER TABLE equip_surgery_appointment ADD CONSTRAINT equip_surgery_appointment_fk4 FOREIGN KEY (registation_registation_id) REFERENCES registation(registation_id);
 ALTER TABLE registation ADD CONSTRAINT registation_fk1 FOREIGN KEY (assistents_employe_person_cc) REFERENCES assistents(employe_person_cc);
 ALTER TABLE registation ADD CONSTRAINT registation_fk2 FOREIGN KEY (patients_person_cc) REFERENCES patients(person_cc);
-ALTER TABLE prescription ADD CONSTRAINT prescription_fk1 FOREIGN KEY (medicine_medicine_id) REFERENCES medicine(medicine_id);
 ALTER TABLE sideefect ADD CONSTRAINT sideefect_fk1 FOREIGN KEY (medicine_medicine_id) REFERENCES medicine(medicine_id);
 ALTER TABLE payment ADD CONSTRAINT payment_fk1 FOREIGN KEY (registation_registation_id) REFERENCES registation(registation_id);
 ALTER TABLE specialization ADD CONSTRAINT specialization_fk1 FOREIGN KEY (doctor_employe_person_cc) REFERENCES doctor(employe_person_cc);
 ALTER TABLE contract ADD CONSTRAINT contract_fk1 FOREIGN KEY (employe_person_cc) REFERENCES employe(person_cc);
-ALTER TABLE dosage ADD CONSTRAINT dosage_fk1 FOREIGN KEY (medicine_medicine_id) REFERENCES medicine(medicine_id);
 ALTER TABLE specialization_specialization ADD CONSTRAINT specialization_specialization_fk1 FOREIGN KEY (specialization_spec_id) REFERENCES specialization(spec_id);
 ALTER TABLE specialization_specialization ADD CONSTRAINT specialization_specialization_fk2 FOREIGN KEY (specialization_spec_id1) REFERENCES specialization(spec_id);
+ALTER TABLE medicine_prescription ADD CONSTRAINT medicine_prescription_fk1 FOREIGN KEY (medicine_medicine_id) REFERENCES medicine(medicine_id);
+ALTER TABLE medicine_prescription ADD CONSTRAINT medicine_prescription_fk2 FOREIGN KEY (prescription_prescription_id) REFERENCES prescription(prescription_id);
 ALTER TABLE equip_surgery_appointment_prescription ADD CONSTRAINT equip_surgery_appointment_prescription_fk1 FOREIGN KEY (equip_surgery_appointment_registation_registation_id) REFERENCES equip_surgery_appointment(registation_registation_id);
 ALTER TABLE equip_surgery_appointment_prescription ADD CONSTRAINT equip_surgery_appointment_prescription_fk2 FOREIGN KEY (prescription_prescription_id) REFERENCES prescription(prescription_id);
 ALTER TABLE hospitalization_prescription ADD CONSTRAINT hospitalization_prescription_fk1 FOREIGN KEY (hospitalization_registation_registation_id) REFERENCES hospitalization(registation_registation_id);
@@ -187,6 +186,6 @@ ALTER TABLE nurse_equip_surgery_appointment ADD CONSTRAINT nurse_equip_surgery_a
 ALTER TABLE nurse_nurse ADD CONSTRAINT nurse_nurse_fk1 FOREIGN KEY (nurse_employe_person_cc) REFERENCES nurse(employe_person_cc);
 ALTER TABLE nurse_nurse ADD CONSTRAINT nurse_nurse_fk2 FOREIGN KEY (nurse_employe_person_cc1) REFERENCES nurse(employe_person_cc);
 ''')
-# ..
+
 db.commit()
 db.close()
