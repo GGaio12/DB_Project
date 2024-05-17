@@ -1,0 +1,10 @@
+1 --> Creating database: In pgadmin create a database named 'ProjectDB' and save.
+
+2 --> Creating user: In pgadmin create a user named 'projectuser' and with a password 'password' and with the permission 'Can login?'.
+
+3 --> Giving permissions to user: Go to the 'ProjectDB' and click with the right button and run 'PSQL tool'. In the terminal run 'grant all on schema public to projectuser;'.
+
+4 --> Install psycopg2: Open CMD in ADMIN mode and execute the command 'pip install psycopg2-binary'
+      Note: If pip not regonized go to %appdata% and go to Local\Programs\Python\PythonX and add it as a path in system variables as well as Local\Programs\Python\PythonX\Scripts
+
+5 --> Creating tables: Run Create_Tables.py file one time and refresh and confirm in pgadmin that the tables are there in the database.
