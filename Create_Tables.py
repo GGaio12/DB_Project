@@ -187,6 +187,6 @@ ALTER TABLE nurse_equip_surgery_appointment ADD CONSTRAINT nurse_equip_surgery_a
 ALTER TABLE nurse_nurse ADD CONSTRAINT nurse_nurse_fk1 FOREIGN KEY (nurse_employe_person_cc) REFERENCES nurse(employe_person_cc);
 ALTER TABLE nurse_nurse ADD CONSTRAINT nurse_nurse_fk2 FOREIGN KEY (nurse_employe_person_cc1) REFERENCES nurse(employe_person_cc);
 ''')
-# comment to test git
+# ..
 db.commit()
 db.close()
