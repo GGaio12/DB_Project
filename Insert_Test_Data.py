@@ -30,9 +30,11 @@ tables = {
     'nurse': xml_data[xml_data['type'] == 'nurse'],
     'doctor': xml_data[xml_data['type'] == 'doctor'],
     'assistents': xml_data[xml_data['type'] == 'assistents'],
-    'employe': xml_data[xml_data['type'] == 'employe'],
+    'employee': xml_data[xml_data['type'] == 'employee'],
     'hospitalization': xml_data[xml_data['type'] == 'hospitalization'],
-    'equip_surgery_appointment': xml_data[xml_data['type'] == 'equip_surgery_appointment'],
+    'surgery': xml_data[xml_data['type'] == 'surgery'],
+    'appointment': xml_data[xml_data['type'] == 'appointment'],
+    'equip': xml_data[xml_data['type'] == 'equip'],
     'registation': xml_data[xml_data['type'] == 'registation'],
     'prescription': xml_data[xml_data['type'] == 'prescription'],
     'medicine': xml_data[xml_data['type'] == 'medicine'],
@@ -41,13 +43,12 @@ tables = {
     'specialization': xml_data[xml_data['type'] == 'specialization'],
     'contract': xml_data[xml_data['type'] == 'contract'],
     'surgerytypes': xml_data[xml_data['type'] == 'surgerytypes'],
-    'specialization_specialization': xml_data[xml_data['type'] == 'specialization_specialization'],
+    'sup_specializations': xml_data[xml_data['type'] == 'sup_specializations'],
     'medicine_prescription': xml_data[xml_data['type'] == 'medicine_prescription'],
-    'equip_surgery_appointment_prescription': xml_data[xml_data['type'] == 'equip_surgery_appointment_prescription'],
+    'appointment_prescription': xml_data[xml_data['type'] == 'appointment_prescription'],
     'hospitalization_prescription': xml_data[xml_data['type'] == 'hospitalization_prescription'],
-    'nurse_equip_surgery_appointment': xml_data[xml_data['type'] == 'nurse_equip_surgery_appointment'],
-    'nurse_nurse': xml_data[xml_data['type'] == 'nurse_nurse'],
-    'appointment': xml_data[xml_data['type'] == 'appointment']
+    'nurse_equip': xml_data[xml_data['type'] == 'nurse_equip'],
+    'sup_nurses': xml_data[xml_data['type'] == 'sup_nurses']
 }
 
 # Insert data into each table
