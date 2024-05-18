@@ -114,7 +114,7 @@ CREATE TABLE payment (
 );
 
 CREATE TABLE specialization (
-	spec_id			 INTEGER,
+	spec_id			 SERIAL,
 	name			 VARCHAR(512) NOT NULL,
 	doctor_employee_person_cc INTEGER NOT NULL,
 	PRIMARY KEY(spec_id)
