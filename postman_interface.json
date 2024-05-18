@@ -7,6 +7,129 @@
     },
     "item": [
         {
+            "name": "Create a new patient",
+            "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:8080/dbproj/register/patient",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "8080",
+                    "path": [
+                        "dbproj",
+                        "register",
+                        "patient"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "Create a new assistant",
+            "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:8080/dbproj/register/assistant",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "8080",
+                    "path": [
+                        "dbproj",
+                        "register",
+                        "assistant"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "Create a new nurse",
+            "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:8080/dbproj/register/nurse",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "8080",
+                    "path": [
+                        "dbproj",
+                        "register",
+                        "nurse"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "Create a new doctor",
+            "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:8080/dbproj/register/doctor",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "8080",
+                    "path": [
+                        "dbproj",
+                        "register",
+                        "doctor"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "User authentication",
+            "request": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:8080/dbproj/user",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "8080",
+                    "path": [
+                        "dbproj",
+                        "user"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "",
+            "request": {
+                "method": "",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:8080",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "8080",
+                    "path": [
+
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
             "name": "",
             "request": {
                 "method": "",
@@ -120,5 +243,6 @@
             },
             "response": []
         }
+
     ]
 }
