@@ -11,6 +11,68 @@ StatusCodes = {
 }
 
 
+##########################################################
+#                        ENDPOINTS                       #
+##########################################################
+
+##
+## Landing Page of the Project
+##
+@app.route('/')
+def landing_page():
+    return """
+    Faculdade de Ciencias e Tecnologias da Universidade de Coimbra - FCTUC <br/>
+    Departamento de Engenharia Informática - DEI <br/>
+    <br/>
+    Data Bases Project  <br/>
+    Hospital Management System <br/>
+    <br/>
+    Gonçalo José Carrajola Gaio  Nº: 2022224905 <br/>
+    João Ricardo Teixeira Gaspar Madeira  Nº: 2022200648 <br/>
+    Rodrigo Carvalho dos Santos  Nº: 2022218283 <br/>
+    <br/>
+    Coimbra 2024 <br/>
+    """
+    
+##
+## Creates a new individual of type <type> inserting
+## the data:  --> TODOO!!!
+##
+@app.route('/dbproj/register/<type>')
+def insert_type(type):
+    return
+    
+##
+## User Authentication. Providing username and password,
+## user can authenticate and receive a authentication token.
+##
+@app.route('/dbproj/user')
+def landing_page():
+    return
+    
+##
+## Landing Page of the Project
+##
+@app.route('/')
+def landing_page():
+    return
+    
+##
+## Landing Page of the Project
+##
+@app.route('/')
+def landing_page():
+    
+    
+##
+## Landing Page of the Project
+##
+@app.route('/')
+def landing_page():
+
+
+
+
 
 if __name__ == '__main__':
     # set up logging
