@@ -60,7 +60,7 @@ CREATE TABLE hospitalization (
 CREATE TABLE surgery (
 	sur_id					 SERIAL,
 	operating_room				 VARCHAR(512) NOT NULL,
-	surgerytypes_sur_type_ip			 INTEGER NOT NULL,
+	surgerytypes_sur_type_id			 INTEGER NOT NULL,
 	equip_equip_id				 INTEGER NOT NULL,
 	hospitalization_registation_registation_id INTEGER NOT NULL,
 	PRIMARY KEY(sur_id)
@@ -94,7 +94,7 @@ CREATE TABLE prescription (
 
 CREATE TABLE medicine (
 	medicine_id SERIAL,
-	dosage	 INTEGER,
+	dosage	 VARCHAR(512),
 	PRIMARY KEY(medicine_id)
 );
 
@@ -179,7 +179,7 @@ ALTER TABLE assistents ADD CONSTRAINT assistents_fk1 FOREIGN KEY (employee_perso
 ALTER TABLE employee ADD CONSTRAINT employee_fk1 FOREIGN KEY (person_cc) REFERENCES person(cc);
 ALTER TABLE hospitalization ADD CONSTRAINT hospitalization_fk1 FOREIGN KEY (nurse_employee_person_cc) REFERENCES nurse(employee_person_cc);
 ALTER TABLE hospitalization ADD CONSTRAINT hospitalization_fk2 FOREIGN KEY (registation_registation_id) REFERENCES registation(registation_id);
-ALTER TABLE surgery ADD CONSTRAINT surgery_fk1 FOREIGN KEY (surgerytypes_sur_type_ip) REFERENCES surgerytypes(sur_type_ip);
+ALTER TABLE surgery ADD CONSTRAINT surgery_fk1 FOREIGN KEY (surgerytypes_sur_type_id) REFERENCES surgerytypes(sur_type_ip);
 ALTER TABLE surgery ADD CONSTRAINT surgery_fk2 FOREIGN KEY (equip_equip_id) REFERENCES equip(equip_id);
 ALTER TABLE surgery ADD CONSTRAINT surgery_fk3 FOREIGN KEY (hospitalization_registation_registation_id) REFERENCES hospitalization(registation_registation_id);
 ALTER TABLE appointment ADD CONSTRAINT appointment_fk1 FOREIGN KEY (equip_equip_id) REFERENCES equip(equip_id);

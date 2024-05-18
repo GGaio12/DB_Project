@@ -1,63 +1,99 @@
 from DB_Connection import db_connect
 from psycopg2 import sql
 import pandas as pd
+import numpy as np
 
-# Helper function to insert data
-def insert_data(table_name, columns, data):
-    insert_query = sql.SQL("""
-        INSERT INTO {table} ({fields})
-        VALUES ({values})
-        ON CONFLICT DO NOTHING;
-    """).format(
-        table=sql.Identifier(table_name),
-        fields=sql.SQL(', ').join(map(sql.Identifier, columns)),
-        values=sql.SQL(', ').join(sql.Placeholder() * len(columns))
-    )
-    for _, row in data.iterrows():
-        cursor.execute(insert_query, list(row))
+# Function to insert data into the database
+def insert_data(table_name, columns, data, cursor):
+    # If table is prescription just add a prescription_id with auto-increment (SERIAL)
+    if(table_name == 'prescription'):
+        for _ in data.iterrows():
+            cursor.execute(""" INSERT INTO prescription DEFAULT VALUES; """)
+    else:
+        # Removing from columns the columns that are SERIAL type.
+        serial_columns = get_serial_columns(table_name, cursor)
+        columns = [col for col in columns if col not in serial_columns]
+        # Constructing query to send
+        insert_query = """
+            INSERT INTO {} ({})
+            VALUES ({})
+            ON CONFLICT DO NOTHING;
+        """.format(
+            table_name,
+            ', '.join(columns),
+            ', '.join(['%s'] * len(columns))
+        )
+        # Executing query with the given values
+        for _, row in data.iterrows():
+            values = tuple(row[col] for col in columns)
+            cursor.execute(insert_query, convert_types(values))
 
-# Connect to PostgreSQL
+# Function to get SERIAL columns
+def get_serial_columns(table_name, cursor):
+    cursor.execute("""
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = %s AND column_default LIKE 'nextval%%'
+    """, (table_name,))
+    return [row[0] for row in cursor.fetchall()]
+
+# Function to convert numpy types to native Python types
+def convert_types(values):
+    return tuple(int(val) if isinstance(val, (np.integer, np.int64)) else
+                 float(val) if isinstance(val, (np.floating, np.float64)) else
+                 val for val in values)
+    
+# DEBUG FUNCTION -- Function to select and display all rows from a table
+def select_all_from_table(table_name, cursor):
+    cursor.execute(sql.SQL("SELECT * FROM {}").format(sql.Identifier(table_name)))
+    rows = cursor.fetchall()
+    for row in rows:
+        print(row)
+
+# Connecting to the DataBase
 db = db_connect()
 cursor = db.cursor()
 
-# Read XML file into pandas DataFrame
-xml_data = pd.read_xml('data.xml', xpath='.//row')
+# Reading XML file with pandas DataFrames
+xml_data = pd.read_xml('data.xml')
 
 # Dictionary mapping table names to their corresponding DataFrame
 tables = {
-    'person': xml_data[xml_data['type'] == 'person'],
-    'patients': xml_data[xml_data['type'] == 'patients'],
-    'nurse': xml_data[xml_data['type'] == 'nurse'],
-    'doctor': xml_data[xml_data['type'] == 'doctor'],
-    'assistents': xml_data[xml_data['type'] == 'assistents'],
-    'employee': xml_data[xml_data['type'] == 'employee'],
-    'hospitalization': xml_data[xml_data['type'] == 'hospitalization'],
-    'surgery': xml_data[xml_data['type'] == 'surgery'],
-    'appointment': xml_data[xml_data['type'] == 'appointment'],
-    'equip': xml_data[xml_data['type'] == 'equip'],
-    'registation': xml_data[xml_data['type'] == 'registation'],
-    'prescription': xml_data[xml_data['type'] == 'prescription'],
-    'medicine': xml_data[xml_data['type'] == 'medicine'],
-    'sideefect': xml_data[xml_data['type'] == 'sideefect'],
-    'payment': xml_data[xml_data['type'] == 'payment'],
-    'specialization': xml_data[xml_data['type'] == 'specialization'],
-    'contract': xml_data[xml_data['type'] == 'contract'],
-    'surgerytypes': xml_data[xml_data['type'] == 'surgerytypes'],
-    'sup_specializations': xml_data[xml_data['type'] == 'sup_specializations'],
-    'medicine_prescription': xml_data[xml_data['type'] == 'medicine_prescription'],
-    'appointment_prescription': xml_data[xml_data['type'] == 'appointment_prescription'],
-    'hospitalization_prescription': xml_data[xml_data['type'] == 'hospitalization_prescription'],
-    'nurse_equip': xml_data[xml_data['type'] == 'nurse_equip'],
-    'sup_nurses': xml_data[xml_data['type'] == 'sup_nurses']
+    'person': pd.read_xml('data.xml', xpath='.//person/row'),
+    'patients': pd.read_xml('data.xml', xpath='.//patients/row'),
+    'employee': pd.read_xml('data.xml', xpath='.//employee/row'),
+    'nurse': pd.read_xml('data.xml', xpath='.//nurse/row'),
+    'doctor': pd.read_xml('data.xml', xpath='.//doctor/row'),
+    'assistents': pd.read_xml('data.xml', xpath='.//assistents/row'),
+    'contract': pd.read_xml('data.xml', xpath='.//contract/row'),
+    'specialization': pd.read_xml('data.xml', xpath='.//specialization/row'),
+    'sup_specializations': pd.read_xml('data.xml', xpath='.//sup_specializations/row'),
+    'sup_nurses': pd.read_xml('data.xml', xpath='.//sup_nurses/row'),
+    'registation': pd.read_xml('data.xml', xpath='.//registation/row'),
+    'equip': pd.read_xml('data.xml', xpath='.//equip/row'),
+    'appointment': pd.read_xml('data.xml', xpath='.//appointment/row'),
+    'hospitalization': pd.read_xml('data.xml', xpath='.//hospitalization/row'),
+    'surgerytypes': pd.read_xml('data.xml', xpath='.//surgerytypes/row'),
+    'surgery': pd.read_xml('data.xml', xpath='.//surgery/row'),
+    'payment': pd.read_xml('data.xml', xpath='.//payment/row'),
+    'nurse_equip': pd.read_xml('data.xml', xpath='.//nurse_equip/row'),
+    'prescription': pd.read_xml('data.xml', xpath='.//prescription/row'),
+    'medicine': pd.read_xml('data.xml', xpath='.//medicine/row'),
+    'sideefect': pd.read_xml('data.xml', xpath='.//sideefect/row'),
+    'medicine_prescription': pd.read_xml('data.xml', xpath='.//medicine_prescription/row'),
+    'appointment_prescription': pd.read_xml('data.xml', xpath='.//appointment_prescription/row'),
+    'hospitalization_prescription': pd.read_xml('data.xml', xpath='.//hospitalization_prescription/row')
 }
 
-# Insert data into each table
+# Inserting data into each table
 for table_name, df in tables.items():
     if not df.empty:
         columns = df.columns.tolist()
-        insert_data(table_name, columns, df)
+        # Debug line
+        # print(f"Inserting data into {table_name} with columns {columns}")
+        insert_data(table_name, columns, df, cursor)
 
-# Commit and close the connection
+# Commiting and closing the connection
 db.commit()
 cursor.close()
 db.close()

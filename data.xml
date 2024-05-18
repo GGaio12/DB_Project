@@ -154,18 +154,18 @@
             <doctor_employee_person_cc>8</doctor_employee_person_cc>
         </row>
     </specialization>
-    <sup_specialization>
+    <sup_specializations>
         <row>
-            <specialization_spec_id>8</specialization_spec_id>
-            <low_specialization_spec_id>3</low_specialization_spec_id>
+            <specialization_spec_id>2</specialization_spec_id>
+            <low_specialization_spec_id>1</low_specialization_spec_id>
         </row>
-    </sup_specialization>
-    <sup_nurse>
+    </sup_specializations>
+    <sup_nurses>
         <row>
             <nurse_employee_person_cc>5</nurse_employee_person_cc>
-            <low_nurse_employeee_person_cc>2</low_nurse_employeee_person_cc>
+            <low_nurse_employee_person_cc>2</low_nurse_employee_person_cc>
         </row>
-    </sup_nurse>
+    </sup_nurses>
     
     <!-- ***********************************
          *          REGITS INFOS           *
@@ -173,17 +173,17 @@
     <registation>
         <row>
             <billing>500.0</billing>
-            <assistents_employee_person_cc>2</assistents_employee_person_cc>
+            <assistents_employee_person_cc>4</assistents_employee_person_cc>
             <patients_person_cc>1</patients_person_cc>
         </row>
         <row>
             <billing>300.0</billing>
-            <assistents_employee_person_cc>2</assistents_employee_person_cc>
+            <assistents_employee_person_cc>4</assistents_employee_person_cc>
             <patients_person_cc>6</patients_person_cc>
         </row>
         <row>
             <billing>50.0</billing>
-            <assistents_employee_person_cc>2</assistents_employee_person_cc>
+            <assistents_employee_person_cc>4</assistents_employee_person_cc>
             <patients_person_cc>7</patients_person_cc>
         </row>
     </registation>
