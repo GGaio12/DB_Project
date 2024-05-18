@@ -63,7 +63,7 @@
     <!-- ***********************************
          *         EMPLOYEES INFOS         *
          *********************************** -->
-    <employe>
+    <employee>
         <row>
             <person_cc>2</person_cc>
         </row>
@@ -79,28 +79,28 @@
         <row>
             <person_cc>8</person_cc>
         </row>
-    </employe>
+    </employee>
     <nurse>
         <row>
-            <employe_person_cc>2</employe_person_cc>
+            <employee_person_cc>2</employee_person_cc>
         </row>
         <row>
-            <employe_person_cc>5</employe_person_cc>
+            <employee_person_cc>5</employee_person_cc>
         </row>
     </nurse>
     <doctor>
         <row>
             <medical_licence>12345</medical_licence>
-            <employe_person_cc>3</employe_person_cc>
+            <employee_person_cc>3</employee_person_cc>
         </row>
         <row>
             <medical_licence>23456</medical_licence>
-            <employe_person_cc>8</employe_person_cc>
+            <employee_person_cc>8</employee_person_cc>
         </row>
     </doctor>
     <assistents>
         <row>
-            <employe_person_cc>4</employe_person_cc>
+            <employee_person_cc>4</employee_person_cc>
         </row>
     </assistents>
     <contract>
@@ -109,35 +109,35 @@
             <end_date>2026-01-01</end_date>
             <sal>19200</sal>
             <work_hours>40</work_hours>
-            <employe_person_cc>2</employe_person_cc>
+            <employee_person_cc>2</employee_person_cc>
         </row>
         <row>
-            <start_date>2024-01-01</start_date>
-            <end_date>2026-01-01</end_date>
+            <start_date>01-01-2024</start_date>
+            <end_date>01-01-2026</end_date>
             <sal>19200</sal>
             <work_hours>40</work_hours>
-            <employe_person_cc>5</employe_person_cc>
+            <employee_person_cc>5</employee_person_cc>
         </row>
         <row>
-            <start_date>2020-01-01</start_date>
-            <end_date>2026-01-01</end_date>
+            <start_date>01-01-2020</start_date>
+            <end_date>01-01-2026</end_date>
             <sal>33000</sal>
             <work_hours>35</work_hours>
-            <employe_person_cc>3</employe_person_cc>
+            <employee_person_cc>3</employee_person_cc>
         </row>
         <row>
-            <start_date>2019-01-01</start_date>
-            <end_date>2026-01-01</end_date>
+            <start_date>01-01-2019</start_date>
+            <end_date>01-01-2026</end_date>
             <sal>42000</sal>
             <work_hours>35</work_hours>
-            <employe_person_cc>8</employe_person_cc>
+            <employee_person_cc>8</employee_person_cc>
         </row>
         <row>
-            <start_date>2024-01-01</start_date>
-            <end_date>2025-01-01</end_date>
+            <start_date>01-01-2024</start_date>
+            <end_date>01-01-2025</end_date>
             <sal>12000</sal>
             <work_hours>40</work_hours>
-            <employe_person_cc>4</employe_person_cc>
+            <employee_person_cc>4</employee_person_cc>
         </row>
     </contract>
 
@@ -147,25 +147,25 @@
     <specialization>
         <row>
             <name>Cardiologista</name>
-            <doctor_employe_person_cc>3</doctor_employe_person_cc>
+            <doctor_employee_person_cc>3</doctor_employee_person_cc>
         </row>
         <row>
             <name>Neurocirurgião</name>
-            <doctor_employe_person_cc>8</doctor_employe_person_cc>
+            <doctor_employee_person_cc>8</doctor_employee_person_cc>
         </row>
     </specialization>
-    <specialization_specialization>
+    <sup_specialization>
         <row>
             <specialization_spec_id>8</specialization_spec_id>
-            <specialization_spec_id1>3</specialization_spec_id1>
+            <low_specialization_spec_id>3</low_specialization_spec_id>
         </row>
-    </specialization_specialization>
-    <nurse_nurse>
+    </sup_specialization>
+    <sup_nurse>
         <row>
-            <nurse_employe_person_cc>5</nurse_employe_person_cc>
-            <nurse_employe_person_cc1>2</nurse_employe_person_cc1>
+            <nurse_employee_person_cc>5</nurse_employee_person_cc>
+            <low_nurse_employeee_person_cc>2</low_nurse_employeee_person_cc>
         </row>
-    </nurse_nurse>
+    </sup_nurse>
     
     <!-- ***********************************
          *          REGITS INFOS           *
@@ -173,40 +173,46 @@
     <registation>
         <row>
             <billing>500.0</billing>
-            <assistents_employe_person_cc>2</assistents_employe_person_cc>
+            <assistents_employee_person_cc>2</assistents_employee_person_cc>
             <patients_person_cc>1</patients_person_cc>
         </row>
         <row>
             <billing>300.0</billing>
-            <assistents_employe_person_cc>2</assistents_employe_person_cc>
+            <assistents_employee_person_cc>2</assistents_employee_person_cc>
             <patients_person_cc>6</patients_person_cc>
         </row>
         <row>
             <billing>50.0</billing>
-            <assistents_employe_person_cc>2</assistents_employe_person_cc>
+            <assistents_employee_person_cc>2</assistents_employee_person_cc>
             <patients_person_cc>7</patients_person_cc>
         </row>
     </registation>
     <appointment>
         <row>
-            <appoint_id>1</appoint_id>
-            <date>24-08-2024</date>
-            <patient_person_cc>7</patient_person_cc>
-            <doctor_employe_person_cc>3</doctor_employe_person_cc>
+            <equip_equip_id>2</equip_equip_id>
+            <registation_registation_id>3</registation_registation_id>
         </row>
     </appointment>
     <hospitalization>
         <row>
             <room_num>101</room_num>
-            <nurse_employe_person_cc>2</nurse_employe_person_cc>
+            <nurse_employee_person_cc>2</nurse_employee_person_cc>
             <registation_registation_id>1</registation_registation_id>
         </row>
         <row>
             <room_num>102</room_num>
-            <nurse_employe_person_cc>5</nurse_employe_person_cc>
+            <nurse_employee_person_cc>5</nurse_employee_person_cc>
             <registation_registation_id>2</registation_registation_id>
         </row>
     </hospitalization>
+    <surgery>
+        <row>
+            <operating_room>OR1</operating_room>
+            <surgerytypes_sur_type_id>1</surgerytypes_sur_type_id>
+            <equip_equip_id>1</equip_equip_id>
+            <hospitalization_registation_registation_id>2</hospitalization_registation_registation_id>
+        </row>
+    </surgery>
     <payment>
         <row>
             <type>Crédito</type>
@@ -225,40 +231,33 @@
     <!-- ***********************************
          *          EQUIPS INFOS           *
          *********************************** -->
-    <equip_surgery_appointment>
+    <equip>
         <row>
-            <surgery_operating_room>OR1</surgery_operating_room>
-            <surgerytypes_sur_type_ip>1</surgerytypes_sur_type_ip>
-            <doctor_employe_person_cc>8</doctor_employe_person_cc>
-            <hospitalization_registation_registation_id>1</hospitalization_registation_registation_id>
-            <registation_registation_id>1</registation_registation_id>
+            <doctor_employee_person_cc>8</doctor_employee_person_cc>
         </row>
-    </equip_surgery_appointment>
+        <row>
+            <doctor_employee_person_cc>3</doctor_employee_person_cc>
+        </row>
+    </equip>
     <surgerytypes>
         <row>
             <name>Neurocirurgia</name>
         </row>
     </surgerytypes>
-    <equip_surgery_appointment_prescription>
+    <nurse_equip>
         <row>
-            <equip_surgery_appointment_registation_registation_id>1</equip_surgery_appointment_registation_registation_id>
-            <prescription_prescription_id>1</prescription_prescription_id>
+            <nurse_employee_person_cc>5</nurse_employee_person_cc>
+            <equip_equip_id>1</equip_equip_id>
         </row>
         <row>
-            <equip_surgery_appointment_registation_registation_id>2</equip_surgery_appointment_registation_registation_id>
-            <prescription_prescription_id>2</prescription_prescription_id>
-        </row>
-    </equip_surgery_appointment_prescription>
-    <nurse_equip_surgery_appointment>
-        <row>
-            <nurse_employe_person_cc>5</nurse_employe_person_cc>
-            <equip_surgery_appointment_registation_registation_id>1</equip_surgery_appointment_registation_registation_id>
+            <nurse_employee_person_cc>2</nurse_employee_person_cc>
+            <equip_equip_id>1</equip_equip_id>
         </row>
         <row>
-            <nurse_employe_person_cc>2</nurse_employe_person_cc>
-            <equip_surgery_appointment_registation_registation_id>2</equip_surgery_appointment_registation_registation_id>
+            <nurse_employee_person_cc>2</nurse_employee_person_cc>
+            <equip_equip_id>2</equip_equip_id>
         </row>
-    </nurse_equip_surgery_appointment>
+    </nurse_equip>
 
     <!-- ***********************************
          *      PRESCRIPTIONS INFOS        *
@@ -298,9 +297,19 @@
         </row>
         <row>
             <medicine_medicine_id>2</medicine_medicine_id>
+            <prescription_prescription_id>1</prescription_prescription_id>
+        </row>
+        <row>
+            <medicine_medicine_id>2</medicine_medicine_id>
             <prescription_prescription_id>2</prescription_prescription_id>
         </row>
     </medicine_prescription>
+    <appointment_prescription>
+        <row>
+            <appointment_registation_registation_id>3</appointment_registation_registation_id>
+            <prescription_prescription_id>2</prescription_prescription_id>
+        </row>
+    </appointment_prescription>
     <hospitalization_prescription>
         <row>
             <hospitalization_registation_registation_id>1</hospitalization_registation_registation_id>
