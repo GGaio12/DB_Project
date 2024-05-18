@@ -46,7 +46,8 @@ tables = {
     'equip_surgery_appointment_prescription': xml_data[xml_data['type'] == 'equip_surgery_appointment_prescription'],
     'hospitalization_prescription': xml_data[xml_data['type'] == 'hospitalization_prescription'],
     'nurse_equip_surgery_appointment': xml_data[xml_data['type'] == 'nurse_equip_surgery_appointment'],
-    'nurse_nurse': xml_data[xml_data['type'] == 'nurse_nurse']
+    'nurse_nurse': xml_data[xml_data['type'] == 'nurse_nurse'],
+    'appointment': xml_data[xml_data['type'] == 'appointment']
 }
 
 # Insert data into each table

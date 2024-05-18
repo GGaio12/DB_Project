@@ -4,6 +4,14 @@ db = db_connect()
 cursor = db.cursor()
 
 cursor.execute('''
+DROP TABLE IF EXISTS 
+patients, person, nurse, doctor, assistents, 
+employe, hospitalization, equip_surgery_appointment, registation, 
+prescription, medicine, sideefect, payment, specialization, contract, 
+surgerytypes, specialization_specialization, medicine_prescription, 
+equip_surgery_appointment_prescription, hospitalization_prescription, 
+nurse_equip_surgery_appointment, nurse_nurse;
+               
 CREATE TABLE patients (
 	patient_id SERIAL,
 	person_cc	 INTEGER,
@@ -13,7 +21,7 @@ CREATE TABLE patients (
 CREATE TABLE person (
 	cc	 INTEGER,
 	name	 VARCHAR(512) NOT NULL,
-	birthdate TIMESTAMP NOT NULL,
+	birthdate VARCHAR(512) NOT NULL,
 	PRIMARY KEY(cc)
 );
 
@@ -105,8 +113,8 @@ CREATE TABLE specialization (
 
 CREATE TABLE contract (
 	contract_id	 SERIAL,
-	start_date	 TIMESTAMP NOT NULL,
-	end_date		 TIMESTAMP NOT NULL,
+	start_date	 VARCHAR(512) NOT NULL,
+	end_date		 VARCHAR(512) NOT NULL,
 	sal		 FLOAT(8) NOT NULL,
 	work_hours	 INTEGER NOT NULL,
 	employe_person_cc INTEGER NOT NULL,
