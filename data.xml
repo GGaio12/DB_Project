@@ -1,4 +1,7 @@
 <data>
+    <!-- ***********************************
+         *           PEOPLE INFOS          *
+         *********************************** -->
     <person>
         <row>
             <cc>1</cc>
@@ -41,6 +44,10 @@
             <birthdate>20-11-1969</birthdate>
         </row>
     </person>
+    
+    <!-- ***********************************
+         *         PATIENTS INFOS          *
+         *********************************** -->
     <patients>
         <row>
             <person_cc>1</person_cc>
@@ -52,6 +59,27 @@
             <person_cc>7</person_cc>
         </row>
     </patients>
+
+    <!-- ***********************************
+         *         EMPLOYEES INFOS         *
+         *********************************** -->
+    <employe>
+        <row>
+            <person_cc>2</person_cc>
+        </row>
+        <row>
+            <person_cc>3</person_cc>
+        </row>
+        <row>
+            <person_cc>4</person_cc>
+        </row>
+        <row>
+            <person_cc>5</person_cc>
+        </row>
+        <row>
+            <person_cc>8</person_cc>
+        </row>
+    </employe>
     <nurse>
         <row>
             <employe_person_cc>2</employe_person_cc>
@@ -75,121 +103,6 @@
             <employe_person_cc>4</employe_person_cc>
         </row>
     </assistents>
-    <employe>
-        <row>
-            <person_cc>2</person_cc>
-        </row>
-        <row>
-            <person_cc>3</person_cc>
-        </row>
-        <row>
-            <person_cc>4</person_cc>
-        </row>
-        <row>
-            <person_cc>5</person_cc>
-        </row>
-        <row>
-            <person_cc>8</person_cc>
-        </row>
-    </employe>
-    <appointment>
-        <row>
-            <appoint_id>1</appoint_id>
-            <date>24-08-2024</date>
-            <patient_person_cc>7</patient_person_cc>
-            <doctor_employe_person_cc>3</doctor_employe_person_cc>
-        </row>
-    </appointment>
-    <hospitalization>
-        <row>
-            <room_num>101</room_num>
-            <nurse_employe_person_cc>2</nurse_employe_person_cc>
-            <registation_registation_id>1</registation_registation_id>
-        </row>
-        <row>
-            <room_num>102</room_num>
-            <nurse_employe_person_cc>5</nurse_employe_person_cc>
-            <registation_registation_id>2</registation_registation_id>
-        </row>
-    </hospitalization>
-    <equip_surgery_appointment>
-        <row>
-            <surgery_operating_room>OR1</surgery_operating_room>
-            <surgerytypes_sur_type_ip>1</surgerytypes_sur_type_ip>
-            <doctor_employe_person_cc>8</doctor_employe_person_cc>
-            <hospitalization_registation_registation_id>1</hospitalization_registation_registation_id>
-            <registation_registation_id>1</registation_registation_id>
-        </row>
-    </equip_surgery_appointment>
-    <registation>
-        <row>
-            <billing>500.0</billing>
-            <assistents_employe_person_cc>2</assistents_employe_person_cc>
-            <patients_person_cc>1</patients_person_cc>
-        </row>
-        <row>
-            <billing>300.0</billing>
-            <assistents_employe_person_cc>2</assistents_employe_person_cc>
-            <patients_person_cc>6</patients_person_cc>
-        </row>
-        <row>
-            <billing>50.0</billing>
-            <assistents_employe_person_cc>2</assistents_employe_person_cc>
-            <patients_person_cc>7</patients_person_cc>
-        </row>
-    </registation>
-    <prescription>
-        <row>
-            <prescription_id>1</prescription_id>
-        </row>
-        <row>
-            <prescription_id>2</prescription_id>
-        </row>
-    </prescription>
-    <medicine>
-        <row>
-            <dosage>500mg</dosage>
-        </row>
-        <row>
-            <dosage>1000mg</dosage>
-        </row>
-    </medicine>
-    <sideefect>
-        <row>
-            <probability>30</probability>
-            <severity>Moderado</severity>
-            <medicine_medicine_id>1</medicine_medicine_id>
-        </row>
-        <row>
-            <probability>80</probability>
-            <severity>Baixa</severity>
-            <medicine_medicine_id>2</medicine_medicine_id>
-        </row>
-    </sideefect>
-    <payment>
-        <row>
-            <type>Crédito</type>
-            <registation_registation_id>1</registation_registation_id>
-        </row>
-        <row>
-            <type>Crédito</type>
-            <registation_registation_id>2</registation_registation_id>
-        </row>
-        <row>
-            <type>Numerário</type>
-            <registation_registation_id>3</registation_registation_id>
-        </row>
-    </payment>
-    <specialization>
-        <row>
-            <name>Cardiologista</name>
-            <doctor_employe_person_cc>3</doctor_employe_person_cc>
-        </row>
-        <row>
-            <name>Neurocirurgião</name>
-            <doctor_employe_person_cc>8</doctor_employe_person_cc>
-        </row>
-    </specialization>
     <contract>
         <row>
             <start_date>2024-01-01</start_date>
@@ -227,27 +140,105 @@
             <employe_person_cc>4</employe_person_cc>
         </row>
     </contract>
-    <surgerytypes>
+
+    <!-- ***********************************
+         *      SUP & SPECIALIZATIONS      *
+         *********************************** -->
+    <specialization>
         <row>
-            <name>Neurocirurgia</name>
+            <name>Cardiologista</name>
+            <doctor_employe_person_cc>3</doctor_employe_person_cc>
         </row>
-    </surgerytypes>
+        <row>
+            <name>Neurocirurgião</name>
+            <doctor_employe_person_cc>8</doctor_employe_person_cc>
+        </row>
+    </specialization>
     <specialization_specialization>
         <row>
             <specialization_spec_id>8</specialization_spec_id>
             <specialization_spec_id1>3</specialization_spec_id1>
         </row>
     </specialization_specialization>
-    <medicine_prescription>
+    <nurse_nurse>
         <row>
-            <medicine_medicine_id>1</medicine_medicine_id>
-            <prescription_prescription_id>1</prescription_prescription_id>
+            <nurse_employe_person_cc>5</nurse_employe_person_cc>
+            <nurse_employe_person_cc1>2</nurse_employe_person_cc1>
+        </row>
+    </nurse_nurse>
+    
+    <!-- ***********************************
+         *          REGITS INFOS           *
+         *********************************** -->
+    <registation>
+        <row>
+            <billing>500.0</billing>
+            <assistents_employe_person_cc>2</assistents_employe_person_cc>
+            <patients_person_cc>1</patients_person_cc>
         </row>
         <row>
-            <medicine_medicine_id>2</medicine_medicine_id>
-            <prescription_prescription_id>2</prescription_prescription_id>
+            <billing>300.0</billing>
+            <assistents_employe_person_cc>2</assistents_employe_person_cc>
+            <patients_person_cc>6</patients_person_cc>
         </row>
-    </medicine_prescription>
+        <row>
+            <billing>50.0</billing>
+            <assistents_employe_person_cc>2</assistents_employe_person_cc>
+            <patients_person_cc>7</patients_person_cc>
+        </row>
+    </registation>
+    <appointment>
+        <row>
+            <appoint_id>1</appoint_id>
+            <date>24-08-2024</date>
+            <patient_person_cc>7</patient_person_cc>
+            <doctor_employe_person_cc>3</doctor_employe_person_cc>
+        </row>
+    </appointment>
+    <hospitalization>
+        <row>
+            <room_num>101</room_num>
+            <nurse_employe_person_cc>2</nurse_employe_person_cc>
+            <registation_registation_id>1</registation_registation_id>
+        </row>
+        <row>
+            <room_num>102</room_num>
+            <nurse_employe_person_cc>5</nurse_employe_person_cc>
+            <registation_registation_id>2</registation_registation_id>
+        </row>
+    </hospitalization>
+    <payment>
+        <row>
+            <type>Crédito</type>
+            <registation_registation_id>1</registation_registation_id>
+        </row>
+        <row>
+            <type>Crédito</type>
+            <registation_registation_id>2</registation_registation_id>
+        </row>
+        <row>
+            <type>Numerário</type>
+            <registation_registation_id>3</registation_registation_id>
+        </row>
+    </payment>
+
+    <!-- ***********************************
+         *          EQUIPS INFOS           *
+         *********************************** -->
+    <equip_surgery_appointment>
+        <row>
+            <surgery_operating_room>OR1</surgery_operating_room>
+            <surgerytypes_sur_type_ip>1</surgerytypes_sur_type_ip>
+            <doctor_employe_person_cc>8</doctor_employe_person_cc>
+            <hospitalization_registation_registation_id>1</hospitalization_registation_registation_id>
+            <registation_registation_id>1</registation_registation_id>
+        </row>
+    </equip_surgery_appointment>
+    <surgerytypes>
+        <row>
+            <name>Neurocirurgia</name>
+        </row>
+    </surgerytypes>
     <equip_surgery_appointment_prescription>
         <row>
             <equip_surgery_appointment_registation_registation_id>1</equip_surgery_appointment_registation_registation_id>
@@ -258,12 +249,6 @@
             <prescription_prescription_id>2</prescription_prescription_id>
         </row>
     </equip_surgery_appointment_prescription>
-    <hospitalization_prescription>
-        <row>
-            <hospitalization_registation_registation_id>1</hospitalization_registation_registation_id>
-            <prescription_prescription_id>1</prescription_prescription_id>
-        </row>
-    </hospitalization_prescription>
     <nurse_equip_surgery_appointment>
         <row>
             <nurse_employe_person_cc>5</nurse_employe_person_cc>
@@ -274,10 +259,52 @@
             <equip_surgery_appointment_registation_registation_id>2</equip_surgery_appointment_registation_registation_id>
         </row>
     </nurse_equip_surgery_appointment>
-    <nurse_nurse>
+
+    <!-- ***********************************
+         *      PRESCRIPTIONS INFOS        *
+         *********************************** -->
+    <prescription>
         <row>
-            <nurse_employe_person_cc>5</nurse_employe_person_cc>
-            <nurse_employe_person_cc1>2</nurse_employe_person_cc1>
+            <prescription_id>1</prescription_id>
         </row>
-    </nurse_nurse>
+        <row>
+            <prescription_id>2</prescription_id>
+        </row>
+    </prescription>
+    <medicine>
+        <row>
+            <dosage>500mg</dosage>
+        </row>
+        <row>
+            <dosage>1000mg</dosage>
+        </row>
+    </medicine>
+    <sideefect>
+        <row>
+            <probability>30</probability>
+            <severity>Moderado</severity>
+            <medicine_medicine_id>1</medicine_medicine_id>
+        </row>
+        <row>
+            <probability>80</probability>
+            <severity>Baixa</severity>
+            <medicine_medicine_id>2</medicine_medicine_id>
+        </row>
+    </sideefect>
+    <medicine_prescription>
+        <row>
+            <medicine_medicine_id>1</medicine_medicine_id>
+            <prescription_prescription_id>1</prescription_prescription_id>
+        </row>
+        <row>
+            <medicine_medicine_id>2</medicine_medicine_id>
+            <prescription_prescription_id>2</prescription_prescription_id>
+        </row>
+    </medicine_prescription>
+    <hospitalization_prescription>
+        <row>
+            <hospitalization_registation_registation_id>1</hospitalization_registation_registation_id>
+            <prescription_prescription_id>1</prescription_prescription_id>
+        </row>
+    </hospitalization_prescription>
 </data>
