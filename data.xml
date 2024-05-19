@@ -7,41 +7,49 @@
             <cc>1</cc>
             <name>João Dias</name>
             <birthdate>02-01-1980</birthdate>
+            <password>1234</password>
         </row>
         <row>
             <cc>2</cc>
             <name>Miguel Júlio</name>
             <birthdate>15-02-1990</birthdate>
+            <password>2345</password>
         </row>
         <row>
             <cc>3</cc>
             <name>Paulo Matos</name>
             <birthdate>20-05-1985</birthdate>
+            <password>3456</password>
         </row>
         <row>
             <cc>4</cc>
             <name>Mariana Sousa</name>
             <birthdate>17-03-1999</birthdate>
+            <password>4567</password>
         </row>
         <row>
             <cc>5</cc>
             <name>Mário Esteves</name>
             <birthdate>25-08-1975</birthdate>
+            <password>5678</password>
         </row>
         <row>
             <cc>6</cc>
             <name>Rita Silva</name>
             <birthdate>30-06-2003</birthdate>
+            <password>6789</password>
         </row>
         <row>
             <cc>7</cc>
             <name>Beatriz Isabel</name>
             <birthdate>23-07-1995</birthdate>
+            <password>7890</password>
         </row>
         <row>
             <cc>8</cc>
             <name>Ricardo Braga</name>
             <birthdate>20-11-1969</birthdate>
+            <password>8901</password>
         </row>
     </person>
     

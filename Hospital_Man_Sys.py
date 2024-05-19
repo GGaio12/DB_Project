@@ -1,14 +1,38 @@
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from flask import Flask, request, jsonify
 from DB_Connection import db_connect
-import flask
+from flask_bcrypt import Bcrypt
+from functools import wraps
+import psycopg2
 import logging
+import os
 
-app = flask.Flask(__name__)
+app = Flask(__name__)
+
+# Configuring JWT secret key
+app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'password')
+jwt = JWTManager(app)
+
+# Initialize Bcrypt
+bcrypt = Bcrypt(app)
 
 StatusCodes = {
     'success': 200,
     'api_error': 400,
     'internal_error': 500
 }
+
+# Custom decorator for role-based access control
+def roles_required(*roles):
+    def wrapper(fn):
+        @wraps(fn)
+        def decorator(*args, **kwargs):
+            identity = get_jwt_identity()
+            if identity['role'] not in roles:
+                return jsonify({'status': StatusCodes['api_error'], 'results': 'Your role cant access this functionality'})
+            return fn(*args, **kwargs)
+        return decorator
+    return wrapper
 
 
 ##########################################################
@@ -43,18 +67,88 @@ def insert_type(type):
     return
     
 ##
-## User Authentication. Providing username and password,
+## User Authentication. Providing name and password,
 ## user can authenticate and receive a authentication token.
 ##
 @app.route('/dbproj/user', methods=['PUT'])
 def authenticate_user():
-    return
+    # Getting json payload
+    payload = request.get_json()
     
-##
-## Schedule	Appointment. Creates a new appointment inserting
+    # Connecting to DB
+    db = db_connect()
+    cursor = db.cursor()
+    
+    # Verifying name and password are in payload
+    if('name' not in payload or 'password' not in payload):
+        response = {'status': StatusCodes['api_error'], 'results': 'name/password not in payload'}
+        return jsonify(response)
+    
+    # Getting name and password
+    name = payload['name']
+    password = payload['password']
+    
+    # Constructing the query statement to execute
+    statement = '''
+                SELECT password, cc from %s join person
+                on cc=%s
+                and name=%s;
+                '''
+
+    try:
+        for i in range(4):
+            # Determinig query values
+            if(i == 0):
+                role = 'patient'
+                cc_type = 'person_cc'
+                table = 'patients'
+            else:
+                cc_type = 'employee_person_cc'
+                if(i == 1):
+                    role = 'nurse'
+                    table = 'nurse'
+                elif(i == 2):
+                    role = 'doctor'
+                    table = 'doctor'
+                else:
+                    role = 'assistent'
+                    table = 'assistents'
+            values = (table, cc_type, name)
+            
+            # Executing query
+            cursor.execute(statement, values)
+            result = cursor.fetchone()
+            
+            # Verifying result and password
+            if(result and bcrypt.check_password_hash(result[0], password)):
+                access_token = create_access_token(identity={'id': result[1], 'role': role})
+                response = {'status': StatusCodes['success'], 'results': access_token}
+                break
+            elif(i == 3):
+                response = {'status': StatusCodes['api_error'], 'results': 'Incorrect name/passord'}
+                
+    except(Exception, psycopg2.DatabaseError) as error:
+        logger.error(f'PUT /dbproj/user - error: {error}')
+        response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
+
+    finally:
+        if(db is not None):
+            db.close()
+
+    return jsonify(response)
+    
+################################# Example protected endpoint #################################
+@app.route('/dbproj/appointment', methods=['POST'])
+@jwt_required()
+@roles_required('staff', 'admin')  # Both 'staff' and 'admin' can schedule appointments    
+##############################################################################################
+
+
 ## the data:  --> TODOO!!!
 ##
 @app.route('/dbproj/appointment', methods=['POST'])
+@jwt_required()
+@roles_required('patient')
 def schedule_appointment():
     return
     
@@ -63,6 +157,8 @@ def schedule_appointment():
 ## their detailed info by giving the patient_user_id in url.
 ##
 @app.route('/dbproj/appointments/<patient_user_id>', methods=['GET'])
+@jwt_required()
+@roles_required('assistent')
 def get_patient_appointments(patient_user_id):
     return
     
@@ -71,6 +167,8 @@ def get_patient_appointments(patient_user_id):
 ## inserting the data:  --> TODOO!!!
 ##
 @app.route('/dbproj/surgery', methods=['POST'])
+@jwt_required()
+@roles_required('assistent')
 def shedule_new_surgery_nh():
     return
 
@@ -79,6 +177,8 @@ def shedule_new_surgery_nh():
 ## inserting the data:  --> TODOO!!!
 ##
 @app.route('/dbproj/surgery/<hospitalization_id>', methods=['POST'])
+@jwt_required()
+@roles_required('assistent')
 def shedule_new_surgery_h(hospitalization_id):
     return
 
@@ -86,7 +186,11 @@ def shedule_new_surgery_h(hospitalization_id):
 ## Get the list of prescriptions and details of it for a specific passient
 ##
 @app.route('/dbproj/prescriptions/<person_id>', methods=['GET'])
+@jwt_required()
 def get_passient_prescriptions(person_id):
+    identity = get_jwt_identity()
+    if(identity['role'] == 'patient' and identity['id'] != person_id):
+        return jsonify({'status': StatusCodes['api_error'], 'results': 'Your id does not matchs the url id provided'})
     return
 
 ##
@@ -94,7 +198,9 @@ def get_passient_prescriptions(person_id):
 ##   --> TODOO!!!
 ##
 @app.route('/dbproj/prescription/', methods=['POST'])
-def get_passient_prescriptions():
+@jwt_required()
+@roles_required('doctor')
+def add_prescription():
     return
 
 ##
@@ -102,13 +208,18 @@ def get_passient_prescriptions():
 ##  --> TODOO!!!
 ##
 @app.route('/dbproj/bills/<bill_id>', methods=['POST'])
+@jwt_required()
+@roles_required('patient')
 def pay_bill(bill_id):
+    # needs to verify if the bill is from the patient who is requesting it
     return
 
 ##
 ## Lists top 3 passients considering the money spent in the month.
 ##
 @app.route('/dbproj/top3', methods=['GET'])
+@jwt_required()
+@roles_required('assistent')
 def get_top3_passients():
     return
 
@@ -116,6 +227,8 @@ def get_top3_passients():
 ## Daily summary. Lists a count for all hospitalizations details of a day.
 ##
 @app.route('/dbproj/daily/<year-month-day>', methods=['GET'])
+@jwt_required()
+@roles_required('assistent')
 def list_daily_summary(time_stamp):
     return
 
@@ -124,6 +237,8 @@ def list_daily_summary(time_stamp):
 ## in each month for the 12 months.
 ##
 @app.route('/dbproj/report', methods=['GET'])
+@jwt_required()
+@roles_required('assistent')
 def generate_monthly_report():
     return
 

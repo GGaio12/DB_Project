@@ -12,3 +12,5 @@
 6 --> Install lxml: Open CMD in ADMIN mode and execute the command 'pip install lxml'. If error look to step 4.
 
 7 --> Insert initial test data: Run Insert_Test_Data.py one time.
+
+8 --> Install flask, Flask-JWT-Extended and Flask-Bcrypt: Open CMD in ADMIN mode and execute the command 'pip install flask', 'pip install Flask-JWT-Extended' and 'pip install Flask-Bcrypt'. If error look to step 4.

@@ -2,6 +2,7 @@ from DB_Connection import db_connect
 from psycopg2 import sql
 import pandas as pd
 import numpy as np
+import bcrypt
 
 # Function to insert data into the database
 def insert_data(table_name, columns, data, cursor):
@@ -26,6 +27,8 @@ def insert_data(table_name, columns, data, cursor):
         # Executing query with the given values
         for _, row in data.iterrows():
             values = tuple(row[col] for col in columns)
+            if table_name == 'person':
+                values = hash_password_in_person(values, columns)
             cursor.execute(insert_query, convert_types(values))
 
 # Function to get SERIAL columns
@@ -42,6 +45,16 @@ def convert_types(values):
     return tuple(int(val) if isinstance(val, (np.integer, np.int64)) else
                  float(val) if isinstance(val, (np.floating, np.float64)) else
                  val for val in values)
+    
+# Function to hash the password in the 'person' table data
+def hash_password_in_person(values, columns):
+    if 'password' in columns:
+        password_index = columns.index('password')
+        password = str(values[password_index])
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        values = list(values)
+        values[password_index] = hashed_password.decode('utf-8')
+    return tuple(values)
     
 # DEBUG FUNCTION -- Function to select and display all rows from a table
 def select_all_from_table(table_name, cursor):

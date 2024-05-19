@@ -21,6 +21,7 @@ CREATE TABLE person (
 	cc	 INTEGER,
 	name	 VARCHAR(512) NOT NULL,
 	birthdate VARCHAR(512) NOT NULL,
+	password	VARCHAR(512) NOT NULL,
 	PRIMARY KEY(cc)
 );
 
