@@ -111,7 +111,72 @@
             "response": []
         },
         {
-            "name": "",
+            "name": "Schedule Appointment",
+            "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:8080/dbproj/appointment",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "8080",
+                    "path": [
+                        "dbproj",
+                        "appointment"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "See Appointment",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:8080/dbproj/appointment/{patient_user_id}",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "8080",
+                    "path": [
+                        "dbproj",
+                        "appointment",
+                        "{patient_user_id}"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "Schedule Surgery",
+            "request": {
+                "method": "POST",
+                "header": [],
+                "body":{
+                    "mode":"raw",
+                    "raw":""
+                },
+                "url": {
+                    "raw": "http://localhost:8080/dbproj/surgery",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "8080",
+                    "path": [
+                        "dbproj",
+                        "surgery"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "Schedule Surgery Individual",
             "request": {
                 "method": "",
                 "header": [],
@@ -130,119 +195,127 @@
             "response": []
         },
         {
-            "name": "",
+            "name": "Get Prescriptions",
             "request": {
-                "method": "",
+                "method": "GET",
                 "header": [],
                 "url": {
-                    "raw": "http://localhost:8080",
+                    "raw": "http://localhost:8080/dbproj/prescriptions/{person_id}",
                     "protocol": "http",
                     "host": [
                         "localhost"
                     ],
                     "port": "8080",
                     "path": [
-
+                        "dbproj",
+                        "prescriptions",
+                        "{person id}"
                     ]
                 }
             },
             "response": []
         },
         {
-            "name": "",
+            "name": "Add Prescriptions",
             "request": {
-                "method": "",
+                "method": "POST",
                 "header": [],
                 "url": {
-                    "raw": "http://localhost:8080",
+                    "raw": "http://localhost:8080/dbproj/prescriptions",
                     "protocol": "http",
                     "host": [
                         "localhost"
                     ],
                     "port": "8080",
                     "path": [
-
+                        "dbproj",
+                        "prescriptions"
                     ]
                 }
             },
             "response": []
         },
         {
-            "name": "",
+            "name": "Execute Payment",
             "request": {
-                "method": "",
+                "method": "POST",
                 "header": [],
                 "url": {
-                    "raw": "http://localhost:8080",
+                    "raw": "http://localhost:8080/dbproj/bills/{bill_id}",
                     "protocol": "http",
                     "host": [
                         "localhost"
                     ],
                     "port": "8080",
                     "path": [
-
+                        "dbproj",
+                        "bills",
+                        "{bill_id}"
                     ]
                 }
             },
             "response": []
         },
         {
-            "name": "",
+            "name": "List Top 3 patients",
             "request": {
-                "method": "",
+                "method": "GET",
                 "header": [],
                 "url": {
-                    "raw": "http://localhost:8080",
+                    "raw": "http://localhost:8080/dbproj/top3",
                     "protocol": "http",
                     "host": [
                         "localhost"
                     ],
                     "port": "8080",
                     "path": [
-
+                        "dbproj",
+                        "top3"
                     ]
                 }
             },
             "response": []
         },
         {
-            "name": "",
+            "name": "Daily Summary",
             "request": {
-                "method": "",
+                "method": "GET",
                 "header": [],
                 "url": {
-                    "raw": "http://localhost:8080",
+                    "raw": "http://localhost:8080/dbproj/daily/{day-month-year}",
                     "protocol": "http",
                     "host": [
                         "localhost"
                     ],
                     "port": "8080",
                     "path": [
-
+                        "dbproj",
+                        "daily",
+                        "{day-month-year}"
                     ]
                 }
             },
             "response": []
         },
         {
-            "name": "",
+            "name": "Generate a monthly report",
             "request": {
-                "method": "",
+                "method": "GET",
                 "header": [],
                 "url": {
-                    "raw": "http://localhost:8080",
+                    "raw": "http://localhost:8080/dbproj/report",
                     "protocol": "http",
                     "host": [
                         "localhost"
                     ],
                     "port": "8080",
                     "path": [
-
+                        "dbproj",
+                        "report"
                     ]
                 }
             },
             "response": []
         }
-
     ]
 }
