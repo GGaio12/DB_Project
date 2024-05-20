@@ -71,6 +71,7 @@ CREATE TABLE surgery (
 
 CREATE TABLE appointment (
 	appoint_id		 SERIAL,
+	appoint_date	TIMESTAMP NOT NULL,
 	equip_equip_id		 INTEGER NOT NULL,
 	registration_registration_id INTEGER,
 	PRIMARY KEY(registration_registration_id)
@@ -164,9 +165,10 @@ CREATE TABLE hospitalization_prescription (
 );
 
 CREATE TABLE nurse_equip (
+    nurse_equip_id	SERIAL,
 	nurse_employee_person_cc INTEGER,
 	equip_equip_id		 INTEGER NOT NULL,
-	PRIMARY KEY(nurse_employee_person_cc)
+	PRIMARY KEY(nurse_equip_id)
 );
 
 CREATE TABLE sup_nurse (

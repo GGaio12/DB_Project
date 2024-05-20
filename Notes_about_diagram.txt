@@ -1,7 +1,11 @@
 Notes Diagram:
-In medicine, dosage was changed to varchar(512)
+In appointment were added the attribute appoint_date TIMESTAMP NOT NULL.
+In resgistration the attribute 'billing' was changed to 'bill'.
+In medicine, dosage was changed to varchar(512).
+In nurse_equip was added an attribute: nurse_equip_id SERIAL.
+In nurse_equip the attribute nurse_equip_id was turned into PK. Note: The constraint didn't change
 Only in physical:
-  nurse_nurse table is now: sup_nurse
-  nurse_employee_person_cc1 in sup_nurse is now: low_nurse_employee_person_cc
-  specialization_specialization is now: sup_specialization
-  specialization_spec_id1 in sup_specialization is now: low_specialization_spec_id
+  nurse_nurse table is now: sup_nurse.
+  nurse_employee_person_cc1 in sup_nurse is now: low_nurse_employee_person_cc.
+  specialization_specialization is now: sup_specialization.
+  specialization_spec_id1 in sup_specialization is now: low_specialization_spec_id.

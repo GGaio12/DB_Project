@@ -234,7 +234,35 @@ def schedule_appointment():
 @jwt_required()
 @roles_required('assistant')
 def get_patient_appointments(patient_user_id):
-    return
+    # Connecting to Data Base
+    db = db_connect()
+    cursor = db.cursor()
+    
+    try:
+        cursor.execute( '''
+                        SELECT appoint_id "id", appoint_date "date", doctor_employee_person_cc "doctor_cc"
+                        FROM appointment as ap, equip, registration as reg, patient, person
+                        WHERE ap.equip_equip_id=equip.equip_id
+                        AND ap.registration_registration_id=reg.registration_id
+                        AND reg.patient_person_cc=patient.person_cc
+                        AND patient.person_cc=person.cc
+                        AND person.id=%s;             
+                        ''', (patient_user_id,))
+        result = cursor.fetchone()
+        if(result):
+            response = {'status': StatusCodes['success'], 'results': result}
+        else:
+            response = {'status': StatusCodes['api_error'], 'results': 'Patient does not exist or do not have any appointments registered'}
+
+    except(Exception, psycopg2.DatabaseError) as error:
+        logging.error(f'GET /dbproj/appointments/<patient_user_id> - error: {error}')
+        response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
+
+    finally:
+        if db:
+            db.close()
+
+    return jsonify(response)
     
 ##
 ## Schedule a new surgery for a passient that isn't hospitalized yet

@@ -205,6 +205,7 @@
     </registration>
     <appointment>
         <row>
+            <appoint_date>2025-08-23 15:15:00</appoint_date>
             <equip_equip_id>2</equip_equip_id>
             <registration_registration_id>3</registration_registration_id>
         </row>
