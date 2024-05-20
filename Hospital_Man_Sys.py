@@ -60,10 +60,10 @@ def landing_page():
     
 ##
 ## Creates a new individual of type <type> inserting the data:
-## Patient:   'cc', 'name', 'birthdate', 'password'
-## Nuser:     'cc', 'name', 'birthdate', 'password', 'start_date', 'end_date', 'sal', 'work_hours'
-## Assistant: 'cc', 'name', 'birthdate', 'password', 'start_date', 'end_date', 'sal', 'work_hours'
-## Doctor:    'cc', 'name', 'birthdate', 'password', 'start_date', 'end_date', 'sal', 'work_hours', 'medical_license', 'spec_name'
+## Patient:   'cc', 'name', 'birthdate', 'email', 'password'
+## Nuser:     'cc', 'name', 'birthdate', 'email', 'password', 'start_date', 'end_date', 'sal', 'work_hours'
+## Assistant: 'cc', 'name', 'birthdate', 'email', 'password', 'start_date', 'end_date', 'sal', 'work_hours'
+## Doctor:    'cc', 'name', 'birthdate', 'email', 'password', 'start_date', 'end_date', 'sal', 'work_hours', 'medical_license', 'spec_name'
 ## NOTE Dates have to be in YYYY-MM-DD format.
 ##
 @app.route('/dbproj/register/<type>', methods=['POST'])
@@ -72,9 +72,9 @@ def insert_type(type):
     payload = request.get_json()
     
     # Fields that have to be in payload
-    required_fields = ['cc', 'name', 'birthdate', 'password']         # Commun fields
-    employee_fields = ['start_date', 'end_date', 'sal', 'work_hours'] # Only employee fields
-    doctor_fields = ['medical_license', 'spec_name']                  # Only doctor fields
+    required_fields = ['cc', 'name', 'birthdate', 'email', 'password'] # Commun fields
+    employee_fields = ['start_date', 'end_date', 'sal', 'work_hours']  # Only employee fields
+    doctor_fields = ['medical_license', 'spec_name']                   # Only doctor fields
 
     # Verifying commun fields
     for field in required_fields:
@@ -102,11 +102,11 @@ def insert_type(type):
     password = bcrypt.generate_password_hash(payload['password']).decode('utf-8')
     
     # Constructing all queries 'table_name', 'columns', 'values_placeholders' and 'values' and placing them in a list by order of execution 
-    queries = [('person', '(cc, name, birthdate, password)', '%s, %s, %s, %s', (cc, name, birthdate, password))]
+    queries = [('person', '(cc, name, birthdate, email, password)', '%s, %s, %s, %s', (cc, name, birthdate, password))]
     if(is_employee):
         queries.append(('employee', '(person_cc)', '%s', (cc,)))
         if(type == 'doctor'):
-            queries.append((type, '(employee_person_cc, medical_licence)', '%s, %s', (cc, payload['medical_licence'])))
+            queries.append((type, '(employee_person_cc, medical_license)', '%s, %s', (cc, payload['medical_license'])))
             queries.append(('specialization', '(name, doctor_employee_person_cc)', '%s, %s', (payload['spec_name'], cc)))
         else:
             queries.append((type, '(employee_person_cc)', '%s', (cc,)))
@@ -130,7 +130,15 @@ def insert_type(type):
             cursor.execute(query, values)
 
         db.commit()
-        response = {'status': StatusCodes['success'], 'results': cc}
+        
+        cursor.execute('''
+                       SELECT id
+                       FROM person
+                       WHERE cc=%s;
+                       ''', (cc,))
+        id = cursor.fetchone()
+        
+        response = {'status': StatusCodes['success'], 'results': id}
 
     except(Exception, psycopg2.DatabaseError) as error:
         logging.error(f'POST /dbproj/register/<type> - error: {error}')
