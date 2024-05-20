@@ -59,23 +59,100 @@ def landing_page():
     """
     
 ##
-## Creates a new individual of type <type> inserting
-## the data:  --> TODOO!!!
+## Creates a new individual of type <type> inserting the data:
+## Patient:   'cc', 'name', 'birthdate', 'password'
+## Nuser:     'cc', 'name', 'birthdate', 'password', 'start_date', 'end_date', 'sal', 'work_hours'
+## Assistent: 'cc', 'name', 'birthdate', 'password', 'start_date', 'end_date', 'sal', 'work_hours'
+## Doctor:    'cc', 'name', 'birthdate', 'password', 'start_date', 'end_date', 'sal', 'work_hours', 'medical_licence', 'spec_name'
 ##
 @app.route('/dbproj/register/<type>', methods=['POST'])
 def insert_type(type):
-    return
+    # Getting json payload
+    payload = request.get_json()
+    
+    # Fields that have to be in payload
+    required_fields = ['cc', 'name', 'birthdate', 'password']         # Commun fields
+    employee_fields = ['start_date', 'end_date', 'sal', 'work_hours'] # Only employee fields
+    doctor_fields = ['medical_licence', 'spec_name']                  # Only doctor fields
+
+    # Verifying commun fields
+    for field in required_fields:
+        if(field not in payload):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} not in payload'})
+
+    is_employee = False
+    if(type in ['nurse', 'doctor', 'assistent']):
+        is_employee = True
+        # Verifying only employee fields
+        for field in employee_fields:
+            if(field not in payload):
+                return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} not in payload'})
+
+        if(type == 'doctor'):
+            # Verifying only doctor fields
+            for field in doctor_fields:
+                if(field not in payload):
+                    return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} not in payload'})
+    
+    # Initializing commun fields values (hashing password)
+    cc = payload['cc']
+    name = payload['name']
+    birthdate = payload['birthdate']
+    password = bcrypt.generate_password_hash(payload['password']).decode('utf-8')
+    
+    # Constructing all queries 'table_name', 'columns', 'values_placeholders' and 'values' and placing them in a list by order of execution 
+    queries = [('person', '(cc, name, birthdate, password)', '%s, %s, %s, %s', (cc, name, birthdate, password))]
+    if(is_employee):
+        queries.append(('employee', '(person_cc)', '%s', (cc,)))
+        if(type == 'doctor'):
+            queries.append(('doctor', '(employee_person_cc, medical_licence)', '%s, %s', (cc, payload['medical_licence'])))
+            queries.append(('specialization', '(name, doctor_employee_person_cc)', '%s, %s', (payload['spec_name'], cc)))
+        elif(type == 'nurse'):
+            queries.append(('nurse', '(employee_person_cc)', '%s', (cc,)))
+        else:
+            queries.append(('assistents', '(employee_person_cc)', '%s', (cc,)))
+        queries.append(('contract', '(start_date, end_date, sal, work_hours, employee_person_cc)', '%s, %s, %s, %s, %s',
+                        (payload['start_date'], payload['end_date'], payload['sal'], payload['work_hours'], cc)))
+    else:
+        queries.append(('patients', '(person_cc)', '%s', (cc,)))
+    
+    # Connecting to Data Base
+    db = db_connect()
+    cursor = db.cursor()
+    
+    # Executing all queries
+    try:
+        for table, columns, values_placeholders, values in queries:
+            query = f'''
+                INSERT INTO {table} {columns}
+                VALUES ({values_placeholders})
+                ON CONFLICT DO NOTHING;
+            '''
+            cursor.execute(query, values)
+
+        db.commit()
+        response = {'status': StatusCodes['success'], 'results': cc}
+
+    except(Exception, psycopg2.DatabaseError) as error:
+        logging.error(f'POST /dbproj/register/<type> - error: {error}')
+        response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
+
+    finally:
+        if db:
+            db.close()
+
+    return jsonify(response)
     
 ##
 ## User Authentication. Providing name and password,
-## user can authenticate and receive a authentication token.
+## user can authenticate and receive an authentication token.
 ##
 @app.route('/dbproj/user', methods=['PUT'])
 def authenticate_user():
     # Getting json payload
     payload = request.get_json()
     
-    # Connecting to DB
+    # Connecting to Data Base
     db = db_connect()
     cursor = db.cursor()
     
@@ -136,12 +213,6 @@ def authenticate_user():
             db.close()
 
     return jsonify(response)
-    
-################################# Example protected endpoint #################################
-@app.route('/dbproj/appointment', methods=['POST'])
-@jwt_required()
-@roles_required('staff', 'admin')  # Both 'staff' and 'admin' can schedule appointments    
-##############################################################################################
 
 
 ## the data:  --> TODOO!!!
