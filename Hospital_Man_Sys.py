@@ -62,8 +62,9 @@ def landing_page():
 ## Creates a new individual of type <type> inserting the data:
 ## Patient:   'cc', 'name', 'birthdate', 'password'
 ## Nuser:     'cc', 'name', 'birthdate', 'password', 'start_date', 'end_date', 'sal', 'work_hours'
-## Assistent: 'cc', 'name', 'birthdate', 'password', 'start_date', 'end_date', 'sal', 'work_hours'
-## Doctor:    'cc', 'name', 'birthdate', 'password', 'start_date', 'end_date', 'sal', 'work_hours', 'medical_licence', 'spec_name'
+## Assistant: 'cc', 'name', 'birthdate', 'password', 'start_date', 'end_date', 'sal', 'work_hours'
+## Doctor:    'cc', 'name', 'birthdate', 'password', 'start_date', 'end_date', 'sal', 'work_hours', 'medical_license', 'spec_name'
+## NOTE Dates have to be in YYYY-MM-DD format.
 ##
 @app.route('/dbproj/register/<type>', methods=['POST'])
 def insert_type(type):
@@ -73,15 +74,15 @@ def insert_type(type):
     # Fields that have to be in payload
     required_fields = ['cc', 'name', 'birthdate', 'password']         # Commun fields
     employee_fields = ['start_date', 'end_date', 'sal', 'work_hours'] # Only employee fields
-    doctor_fields = ['medical_licence', 'spec_name']                  # Only doctor fields
+    doctor_fields = ['medical_license', 'spec_name']                  # Only doctor fields
 
     # Verifying commun fields
     for field in required_fields:
         if(field not in payload):
             return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} not in payload'})
-
+    
     is_employee = False
-    if(type in ['nurse', 'doctor', 'assistent']):
+    if(type in ['nurse', 'doctor', 'assistant']):
         is_employee = True
         # Verifying only employee fields
         for field in employee_fields:
@@ -105,16 +106,14 @@ def insert_type(type):
     if(is_employee):
         queries.append(('employee', '(person_cc)', '%s', (cc,)))
         if(type == 'doctor'):
-            queries.append(('doctor', '(employee_person_cc, medical_licence)', '%s, %s', (cc, payload['medical_licence'])))
+            queries.append((type, '(employee_person_cc, medical_licence)', '%s, %s', (cc, payload['medical_licence'])))
             queries.append(('specialization', '(name, doctor_employee_person_cc)', '%s, %s', (payload['spec_name'], cc)))
-        elif(type == 'nurse'):
-            queries.append(('nurse', '(employee_person_cc)', '%s', (cc,)))
         else:
-            queries.append(('assistents', '(employee_person_cc)', '%s', (cc,)))
+            queries.append((type, '(employee_person_cc)', '%s', (cc,)))
         queries.append(('contract', '(start_date, end_date, sal, work_hours, employee_person_cc)', '%s, %s, %s, %s, %s',
                         (payload['start_date'], payload['end_date'], payload['sal'], payload['work_hours'], cc)))
     else:
-        queries.append(('patients', '(person_cc)', '%s', (cc,)))
+        queries.append((type, '(person_cc)', '%s', (cc,)))
     
     # Connecting to Data Base
     db = db_connect()
@@ -167,7 +166,7 @@ def authenticate_user():
     
     # Constructing the query statement to execute
     statement = '''
-                SELECT password, cc from %s join person
+                SELECT password, id from %s join person
                 on cc=%s
                 and name=%s;
                 '''
@@ -178,19 +177,15 @@ def authenticate_user():
             if(i == 0):
                 role = 'patient'
                 cc_type = 'person_cc'
-                table = 'patients'
             else:
                 cc_type = 'employee_person_cc'
                 if(i == 1):
                     role = 'nurse'
-                    table = 'nurse'
                 elif(i == 2):
                     role = 'doctor'
-                    table = 'doctor'
                 else:
-                    role = 'assistent'
-                    table = 'assistents'
-            values = (table, cc_type, name)
+                    role = 'assistant'
+            values = (role, cc_type, name)
             
             # Executing query
             cursor.execute(statement, values)
@@ -229,7 +224,7 @@ def schedule_appointment():
 ##
 @app.route('/dbproj/appointments/<patient_user_id>', methods=['GET'])
 @jwt_required()
-@roles_required('assistent')
+@roles_required('assistant')
 def get_patient_appointments(patient_user_id):
     return
     
@@ -239,7 +234,7 @@ def get_patient_appointments(patient_user_id):
 ##
 @app.route('/dbproj/surgery', methods=['POST'])
 @jwt_required()
-@roles_required('assistent')
+@roles_required('assistant')
 def shedule_new_surgery_nh():
     return
 
@@ -249,7 +244,7 @@ def shedule_new_surgery_nh():
 ##
 @app.route('/dbproj/surgery/<hospitalization_id>', methods=['POST'])
 @jwt_required()
-@roles_required('assistent')
+@roles_required('assistant')
 def shedule_new_surgery_h(hospitalization_id):
     return
 
@@ -290,7 +285,7 @@ def pay_bill(bill_id):
 ##
 @app.route('/dbproj/top3', methods=['GET'])
 @jwt_required()
-@roles_required('assistent')
+@roles_required('assistant')
 def get_top3_passients():
     return
 
@@ -299,7 +294,7 @@ def get_top3_passients():
 ##
 @app.route('/dbproj/daily/<year-month-day>', methods=['GET'])
 @jwt_required()
-@roles_required('assistent')
+@roles_required('assistant')
 def list_daily_summary(time_stamp):
     return
 
@@ -309,7 +304,7 @@ def list_daily_summary(time_stamp):
 ##
 @app.route('/dbproj/report', methods=['GET'])
 @jwt_required()
-@roles_required('assistent')
+@roles_required('assistant')
 def generate_monthly_report():
     return
 

@@ -6,57 +6,65 @@
         <row>
             <cc>1</cc>
             <name>João Dias</name>
-            <birthdate>02-01-1980</birthdate>
+            <birthdate>1980-01-02</birthdate>
             <password>1234</password>
+            <email>joaodias@mail.com</email>
         </row>
         <row>
             <cc>2</cc>
             <name>Miguel Júlio</name>
-            <birthdate>15-02-1990</birthdate>
+            <birthdate>1990-02-15</birthdate>
             <password>2345</password>
+            <email>migueljulio@mail.com</email>
         </row>
         <row>
             <cc>3</cc>
             <name>Paulo Matos</name>
-            <birthdate>20-05-1985</birthdate>
+            <birthdate>1985-05-20</birthdate>
             <password>3456</password>
+            <email>paulomatos@mail.com</email>
         </row>
         <row>
             <cc>4</cc>
             <name>Mariana Sousa</name>
-            <birthdate>17-03-1999</birthdate>
+            <birthdate>1999-03-17</birthdate>
             <password>4567</password>
+            <email>marianasousa@mail.com</email>
         </row>
         <row>
             <cc>5</cc>
             <name>Mário Esteves</name>
-            <birthdate>25-08-1975</birthdate>
+            <birthdate>1975-08-25</birthdate>
             <password>5678</password>
+            <email>marioesteves@mail.com</email>
         </row>
         <row>
             <cc>6</cc>
             <name>Rita Silva</name>
-            <birthdate>30-06-2003</birthdate>
+            <birthdate>2003-06-30</birthdate>
             <password>6789</password>
+            <email>ritasilva@mail.com</email>
         </row>
         <row>
             <cc>7</cc>
             <name>Beatriz Isabel</name>
-            <birthdate>23-07-1995</birthdate>
+            <birthdate>1995-07-23</birthdate>
             <password>7890</password>
+            <email>beatrizisabel@mail.com</email>
         </row>
         <row>
             <cc>8</cc>
             <name>Ricardo Braga</name>
-            <birthdate>20-11-1969</birthdate>
+            <birthdate>1969-11-20</birthdate>
             <password>8901</password>
+            <email>ricardobraga@mail.com</email>
         </row>
     </person>
     
     <!-- ***********************************
-         *         PATIENTS INFOS          *
+         *         PATIENT INFOS          *
          *********************************** -->
-    <patients>
+    <patient>
         <row>
             <person_cc>1</person_cc>
         </row>
@@ -66,7 +74,7 @@
         <row>
             <person_cc>7</person_cc>
         </row>
-    </patients>
+    </patient>
 
     <!-- ***********************************
          *         EMPLOYEES INFOS         *
@@ -98,19 +106,19 @@
     </nurse>
     <doctor>
         <row>
-            <medical_licence>12345</medical_licence>
+            <medical_license>12345</medical_license>
             <employee_person_cc>3</employee_person_cc>
         </row>
         <row>
-            <medical_licence>23456</medical_licence>
+            <medical_license>23456</medical_license>
             <employee_person_cc>8</employee_person_cc>
         </row>
     </doctor>
-    <assistents>
+    <assistant>
         <row>
             <employee_person_cc>4</employee_person_cc>
         </row>
-    </assistents>
+    </assistant>
     <contract>
         <row>
             <start_date>2024-01-01</start_date>
@@ -120,29 +128,29 @@
             <employee_person_cc>2</employee_person_cc>
         </row>
         <row>
-            <start_date>01-01-2024</start_date>
-            <end_date>01-01-2026</end_date>
+            <start_date>2024-01-01</start_date>
+            <end_date>2026-01-01</end_date>
             <sal>19200</sal>
             <work_hours>40</work_hours>
             <employee_person_cc>5</employee_person_cc>
         </row>
         <row>
-            <start_date>01-01-2020</start_date>
-            <end_date>01-01-2026</end_date>
+            <start_date>2020-01-01</start_date>
+            <end_date>2026-01-01</end_date>
             <sal>33000</sal>
             <work_hours>35</work_hours>
             <employee_person_cc>3</employee_person_cc>
         </row>
         <row>
-            <start_date>01-01-2019</start_date>
-            <end_date>01-01-2026</end_date>
+            <start_date>2019-01-01</start_date>
+            <end_date>2026-01-01</end_date>
             <sal>42000</sal>
             <work_hours>35</work_hours>
             <employee_person_cc>8</employee_person_cc>
         </row>
         <row>
-            <start_date>01-01-2024</start_date>
-            <end_date>01-01-2025</end_date>
+            <start_date>2024-01-01</start_date>
+            <end_date>2025-01-01</end_date>
             <sal>12000</sal>
             <work_hours>40</work_hours>
             <employee_person_cc>4</employee_person_cc>
@@ -162,77 +170,77 @@
             <doctor_employee_person_cc>8</doctor_employee_person_cc>
         </row>
     </specialization>
-    <sup_specializations>
+    <sup_specialization>
         <row>
             <specialization_spec_id>2</specialization_spec_id>
             <low_specialization_spec_id>1</low_specialization_spec_id>
         </row>
-    </sup_specializations>
-    <sup_nurses>
+    </sup_specialization>
+    <sup_nurse>
         <row>
             <nurse_employee_person_cc>5</nurse_employee_person_cc>
             <low_nurse_employee_person_cc>2</low_nurse_employee_person_cc>
         </row>
-    </sup_nurses>
+    </sup_nurse>
     
     <!-- ***********************************
          *          REGITS INFOS           *
          *********************************** -->
-    <registation>
+    <registration>
         <row>
-            <billing>500.0</billing>
-            <assistents_employee_person_cc>4</assistents_employee_person_cc>
-            <patients_person_cc>1</patients_person_cc>
+            <bill>500.0</bill>
+            <assistant_employee_person_cc>4</assistant_employee_person_cc>
+            <patient_person_cc>1</patient_person_cc>
         </row>
         <row>
-            <billing>300.0</billing>
-            <assistents_employee_person_cc>4</assistents_employee_person_cc>
-            <patients_person_cc>6</patients_person_cc>
+            <bill>300.0</bill>
+            <assistant_employee_person_cc>4</assistant_employee_person_cc>
+            <patient_person_cc>6</patient_person_cc>
         </row>
         <row>
-            <billing>50.0</billing>
-            <assistents_employee_person_cc>4</assistents_employee_person_cc>
-            <patients_person_cc>7</patients_person_cc>
+            <bill>50.0</bill>
+            <assistant_employee_person_cc>4</assistant_employee_person_cc>
+            <patient_person_cc>7</patient_person_cc>
         </row>
-    </registation>
+    </registration>
     <appointment>
         <row>
             <equip_equip_id>2</equip_equip_id>
-            <registation_registation_id>3</registation_registation_id>
+            <registration_registration_id>3</registration_registration_id>
         </row>
     </appointment>
     <hospitalization>
         <row>
             <room_num>101</room_num>
             <nurse_employee_person_cc>2</nurse_employee_person_cc>
-            <registation_registation_id>1</registation_registation_id>
+            <registration_registration_id>1</registration_registration_id>
         </row>
         <row>
             <room_num>102</room_num>
             <nurse_employee_person_cc>5</nurse_employee_person_cc>
-            <registation_registation_id>2</registation_registation_id>
+            <registration_registration_id>2</registration_registration_id>
         </row>
     </hospitalization>
     <surgery>
         <row>
             <operating_room>OR1</operating_room>
-            <surgerytypes_sur_type_id>1</surgerytypes_sur_type_id>
+            <surgerytype_sur_type_id>1</surgerytype_sur_type_id>
             <equip_equip_id>1</equip_equip_id>
-            <hospitalization_registation_registation_id>2</hospitalization_registation_registation_id>
+            <hospitalization_registration_registration_id>2</hospitalization_registration_registration_id>
         </row>
     </surgery>
     <payment>
         <row>
             <type>Crédito</type>
-            <registation_registation_id>1</registation_registation_id>
+            <registration_registration_id>1</registration_registration_id>
         </row>
         <row>
             <type>Crédito</type>
-            <registation_registation_id>2</registation_registation_id>
+            <registration_registration_id>2</registration_registration_id>
         </row>
         <row>
             <type>Numerário</type>
-            <registation_registation_id>3</registation_registation_id>
+            <registration_registration_id>3</registration_registration_id>
         </row>
     </payment>
 
@@ -247,11 +255,11 @@
             <doctor_employee_person_cc>3</doctor_employee_person_cc>
         </row>
     </equip>
-    <surgerytypes>
+    <surgerytype>
         <row>
             <name>Neurocirurgia</name>
         </row>
-    </surgerytypes>
+    </surgerytype>
     <nurse_equip>
         <row>
             <nurse_employee_person_cc>5</nurse_employee_person_cc>
@@ -314,13 +322,13 @@
     </medicine_prescription>
     <appointment_prescription>
         <row>
-            <appointment_registation_registation_id>3</appointment_registation_registation_id>
+            <appointment_registration_registration_id>3</appointment_registration_registration_id>
             <prescription_prescription_id>2</prescription_prescription_id>
         </row>
     </appointment_prescription>
     <hospitalization_prescription>
         <row>
-            <hospitalization_registation_registation_id>1</hospitalization_registation_registation_id>
+            <hospitalization_registration_registration_id>1</hospitalization_registration_registration_id>
             <prescription_prescription_id>1</prescription_prescription_id>
         </row>
     </hospitalization_prescription>
