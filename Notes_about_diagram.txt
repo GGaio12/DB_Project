@@ -3,6 +3,7 @@ In appointment was added the attribute 'appoint_date TIMESTAMP NOT NULL'.
 In registration the attribute 'billing' was changed to 'bill'.
 In registration was added the attribute 'regist_date	TIMESTAMP DEFAULT CURRENT_TIMESTAMP'.
 In prescription was added the attribute 'validity DATE NOT NULL'.
+In medicine was added the attribute 'med_name	VARCHAR(512) NOT NULL'.
 In medicine, 'dosage' was changed to 'VARCHAR(512) NOT NULL'.
 In medicine, was added the attribute 'frequency VARCHAR(512) NOT NULL'.
 In nurse_equip was added the attribute 'nurse_equip_id SERIAL'.
