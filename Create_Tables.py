@@ -22,7 +22,6 @@ CREATE TABLE person (
 	name	 VARCHAR(512) NOT NULL,
 	birthdate DATE NOT NULL,
 	password	VARCHAR(512) NOT NULL,
- 	id	 SERIAL NOT NULL,
 	email	 VARCHAR(512) NOT NULL,
 	PRIMARY KEY(cc)
 );
@@ -87,6 +86,7 @@ CREATE TABLE registration (
 	registration_id		 SERIAL,
 	regist_date	TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	bill			 DOUBLE PRECISION NOT NULL,
+	bill_payed	BOOLEAN NOT NULL,
 	assistant_employee_person_cc INTEGER NOT NULL,
 	patient_person_cc		 INTEGER NOT NULL,
 	PRIMARY KEY(registration_id)
@@ -116,6 +116,7 @@ CREATE TABLE sideefect (
 
 CREATE TABLE payment (
 	payment_id		 SERIAL,
+	ammount			DOUBLE PRECISION,
 	type			 VARCHAR(512),
 	registration_registration_id INTEGER,
 	PRIMARY KEY(payment_id,registration_registration_id)
