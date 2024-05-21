@@ -109,15 +109,22 @@ def insert_type(type):
     # Constructing all queries 'table_name', 'columns', 'values_placeholders' and 'values' and placing them in a list by order of execution 
     queries = [('person', '(cc, name, birthdate, email, password)', '%s, %s, %s, %s', (cc, name, birthdate, password))]
     if(is_employee):
+        # Adding employee-related queries
         queries.append(('employee', '(person_cc)', '%s', (cc,)))
+        
         if(type == 'doctor'):
+            # Adding doctor-specific queries
             queries.append((type, '(employee_person_cc, medical_license)', '%s, %s', (cc, payload['medical_license'])))
             queries.append(('specialization', '(name, doctor_employee_person_cc)', '%s, %s', (payload['spec_name'], cc)))
         else:
+            # Adding other employee type queries (nurse, assistant)
             queries.append((type, '(employee_person_cc)', '%s', (cc,)))
+        
+        # Adding contract-related query
         queries.append(('contract', '(start_date, end_date, sal, work_hours, employee_person_cc)', '%s, %s, %s, %s, %s',
                         (payload['start_date'], payload['end_date'], payload['sal'], payload['work_hours'], cc)))
     else:
+        # Adding patient-related query
         queries.append((type, '(person_cc)', '%s', (cc,)))
     
     # Connecting to Data Base
@@ -136,14 +143,7 @@ def insert_type(type):
 
         db.commit()
         
-        cursor.execute('''
-                       SELECT id
-                       FROM person
-                       WHERE cc=%s;
-                       ''', (cc,))
-        id = cursor.fetchone()
-        
-        response = {'status': StatusCodes['success'], 'results': id}
+        response = {'status': StatusCodes['success'], 'results': cc}
 
     except(Exception, psycopg2.DatabaseError) as error:
         logging.error(f'POST /dbproj/register/<type> - error: {error}')
@@ -168,10 +168,13 @@ def authenticate_user():
     
     logger.debug(f'PUT /dbproj/user - payload: {payload}')
     
-    # Verifying name and password are in payload
-    if('name' not in payload or 'password' not in payload):
-        response = {'status': StatusCodes['api_error'], 'results': 'name/password not in payload'}
-        return jsonify(response)
+    auth_fields = ['name', 'password']
+    
+    # Verifying if all authentication fields are in payload
+    for field in auth_fields:
+        if(field not in payload):
+            response = {'status': StatusCodes['api_error'], 'results': f'{field} not in payload'}
+            return jsonify(response)
     
     # Getting name and password
     name = payload['name']
@@ -179,9 +182,10 @@ def authenticate_user():
     
     # Constructing the query statement to execute
     statement = '''
-                SELECT password, id from %s join person
-                on cc=%s
-                and name=%s;
+                SELECT password, cc
+                FROM %s 
+                JOIN person ON cc=%s
+                AND name=%s;
                 '''
 
     # Connecting to Data Base
@@ -251,15 +255,14 @@ def get_patient_appointments(patient_user_id):
     cursor = db.cursor()
     
     try:
-        cursor.execute( '''
-                        SELECT appoint_id "id", appoint_date "date", p2.id "doctor_id"
-                        FROM appointment as ap, equip, registration as reg, person as p1, person as p2
-                        WHERE ap.equip_equip_id=equip.equip_id
-                        AND doctor_employee_person_cc=p2.cc
-                        AND ap.registration_registration_id=reg.registration_id
-                        AND reg.patient_person_cc=p1.cc
-                        AND p1.id=%s;             
-                        ''', (patient_user_id,))
+        statement = '''
+                    SELECT appoint_id AS id, appoint_date AS date, doctor_employee_person_cc AS doctor_id
+                    FROM appointment AS ap
+                    JOIN equip ON ap.equip_equip_id = equip.equip_id
+                    JOIN registration AS reg ON ap.registration_registration_id = reg.registration_id
+                    WHERE reg.patient_person_cc = %s;            
+                    '''
+        cursor.execute(statement, (patient_user_id,))
         result = cursor.fetchone()
         
         if(result):
@@ -319,54 +322,26 @@ def get_passient_prescriptions(person_id):
     if(identity['role'] == 'patient' and identity['id'] != person_id):
         return jsonify({'status': StatusCodes['api_error'], 'results': 'Your id does not matchs the url id provided'})
     
-    statement =  '''
-                SELECT 
-                    prescription_id AS "id", 
-                    validity, 
-                    med_name AS "medicine name", 
-                    dosage, 
-                    frequency
-                FROM 
-                    prescription AS pres
-                JOIN 
-                    medicine_prescription AS med_pres ON pres.prescription_id = med_pres.prescription_prescription_id
-                JOIN 
-                    medicine AS med ON med_pres.medicine_medicine_id = med.medicine_id
-                JOIN 
-                    hospitalization_prescription AS hosp_pres ON pres.prescription_id = hosp_pres.prescription_prescription_id
-                JOIN 
-                    hospitalization AS hosp ON hosp_pres.hospitalization_registration_registration_id = hosp.registration_registration_id
-                JOIN 
-                    registration AS reg ON hosp.registration_registration_id = reg.registration_id
-                JOIN 
-                    person AS p ON reg.patient_person_cc = p.cc
-                WHERE 
-                    p.id = %(person_id)s
+    statement = '''
+                SELECT prescription_id AS "id", validity, med_name AS "medicine name", dosage, frequency
+                FROM prescription AS pres
+                JOIN medicine_prescription AS med_pres ON pres.prescription_id = med_pres.prescription_prescription_id
+                JOIN medicine AS med ON med_pres.medicine_medicine_id = med.medicine_id
+                JOIN hospitalization_prescription AS hosp_pres ON pres.prescription_id = hosp_pres.prescription_prescription_id
+                JOIN hospitalization AS hosp ON hosp_pres.hospitalization_registration_registration_id = hosp.registration_registration_id
+                JOIN registration AS reg ON hosp.registration_registration_id = reg.registration_id
+                WHERE reg.patient_person_cc = %(person_id)s
 
                 UNION
 
-                SELECT 
-                    prescription_id AS "id", 
-                    validity, 
-                    med_name AS "medicine name", 
-                    dosage, 
-                    frequency
-                FROM 
-                    prescription AS pres
-                JOIN 
-                    medicine_prescription AS med_pres ON pres.prescription_id = med_pres.prescription_prescription_id
-                JOIN 
-                    medicine AS med ON med_pres.medicine_medicine_id = med.medicine_id
-                JOIN 
-                    appointment_prescription AS ap_pres ON pres.prescription_id = ap_pres.prescription_prescription_id
-                JOIN 
-                    appointment AS ap ON ap_pres.appointment_registration_registration_id = ap.registration_registration_id
-                JOIN 
-                    registration AS reg ON ap.registration_registration_id = reg.registration_id
-                JOIN 
-                    person AS p ON reg.patient_person_cc = p.cc
-                WHERE 
-                    p.id = %(person_id)s;
+                SELECT prescription_id AS "id", validity, med_name AS "medicine name", dosage, frequency
+                FROM prescription AS pres
+                JOIN medicine_prescription AS med_pres ON pres.prescription_id = med_pres.prescription_prescription_id
+                JOIN medicine AS med ON med_pres.medicine_medicine_id = med.medicine_id
+                JOIN appointment_prescription AS ap_pres ON pres.prescription_id = ap_pres.prescription_prescription_id
+                JOIN appointment AS ap ON ap_pres.appointment_registration_registration_id = ap.registration_registration_id
+                JOIN registration AS reg ON ap.registration_registration_id = reg.registration_id
+                WHERE reg.patient_person_cc = %(person_id)s;
                 '''
     params = {'person_id': person_id}
     
@@ -450,56 +425,52 @@ def add_prescription():
         return jsonify({'status': StatusCodes['api_error'], 'results': f'Type in payload not regonized'})
     
     # Verifying medicines fields
-    i = 0
-    for medicine in payload['medicines']:
-        i += 1
+    for i, medicine in enumerate(payload['medicines'], start=1):
         for field in med_fields:
-            if(field not in medicine):
+            if field not in medicine:
                 return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} not in medicine N:{i} payload'})
+
+    # SQL Statements
+    # Note: Because type_id and payload['type'] are created in code or already verifyed, it doesn't represent a scurity issue
+    statements = {
+        'max_prescription_id': 'SELECT MAX(prescription_id) FROM prescription;',
+        'max_medicine_id': 'SELECT MAX(medicine_id) FROM medicine;',
+        'max_event_type_id': f'SELECT MAX({type_id}) FROM {payload['type']};'
+    }
     
-    statement = '''
-                SELECT MAX(prescription_id)
-                FROM prescription;
-                '''
-    statement2 = '''
-                 SELECT MAX(medicine_id)
-                 FROM medicine;
-                 '''
-    statement3 = f'''
-                  SELECT MAX({type_id})
-                  FROM {payload['type']};
-                  '''
-    queries = [('prescription', 'validity', '%s', 'CURRENT DATE')]
+    queries = [('prescription', 'validity', '%s', [payload['validity']])]
     
     # Connecting to Data Base
     db = db_connect()
     cursor = db.cursor()
     
     try:
-        cursor.execute(statement3)
-        max_event_type_id = cursor.fetchall()
-        if(int(payload['event_id']) > int(max_event_type_id[0])):
+        # Check if event_id exists
+        cursor.execute(statements['max_event_type_id'])
+        max_event_type_id = cursor.fetchone()[0]
+        if int(payload['event_id']) > int(max_event_type_id):
             return jsonify({'status': StatusCodes['api_error'], 'results': 'Event id in payload does not exist'})
-        
-        cursor.execute(statement)
-        pres_id = cursor.fetchall()
-        pres_id = int(pres_id) + 1
-        pres_id = str(pres_id)
-        
-        cursor.execute(statement2)
-        med_id = cursor.fetchall()        
+
+        # Get new prescription_id
+        cursor.execute(statements['max_prescription_id'])
+        pres_id = cursor.fetchone()[0] + 1
+
+        # Get new medicine_id starting point
+        cursor.execute(statements['max_medicine_id'])
+        med_id = cursor.fetchone()[0]
         
         for medicine in payload['medicines']:
             med_id += 1
-            queries.append(
-                            ('medicine', '(med_name, dosage, frequency)', '%s, %s, %s', (medicine['medicine_name'], medicine['dosage'], medicine['frequency'])),
-                            ('medicine_prescription', '(medicine_medicine_id, prescription_prescription_id)', '%s, %s', (med_id, pres_id))
-                          )
+            queries.extend([
+                            ('medicine', '(med_name, dosage, frequency)', '%s, %s, %s', [medicine['medicine_name'], medicine['dosage'], medicine['frequency']]),
+                            ('medicine_prescription', '(medicine_medicine_id, prescription_prescription_id)', '%s, %s', [med_id, pres_id])
+                          ])
         if(payload['type'] == 'appointment'):
-            queries.append(('appointment_prescription', '(appointment_registration_registration_id, prescription_prescription_id)', '%s, %s', (payload['event_id'], pres_id)))
+            queries.append(('appointment_prescription', '(appointment_registration_registration_id, prescription_prescription_id)', '%s, %s', [payload['event_id'], pres_id]))
         else:
-            queries.append(('hospitalization_prescription', '(hospitalization_registration_registration_id, prescription_prescription_id)', '%s, %s', (payload['event_id'], pres_id)))
+            queries.append(('hospitalization_prescription', '(hospitalization_registration_registration_id, prescription_prescription_id)', '%s, %s', [payload['event_id'], pres_id]))
     
+        # Executting all queries to insert elements in tables
         for table, columns, values_placeholders, values in queries:
             statement = f'''
                         INSERT INTO {table} {columns}

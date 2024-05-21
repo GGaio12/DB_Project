@@ -189,16 +189,19 @@
     <registration>
         <row>
             <bill>500.0</bill>
+            <bill_payed>FALSE</bill_payed>
             <assistant_employee_person_cc>4</assistant_employee_person_cc>
             <patient_person_cc>1</patient_person_cc>
         </row>
         <row>
             <bill>300.0</bill>
+            <bill_payed>FALSE</bill_payed>
             <assistant_employee_person_cc>4</assistant_employee_person_cc>
             <patient_person_cc>6</patient_person_cc>
         </row>
         <row>
             <bill>50.0</bill>
+            <bill_payed>TRUE</bill_payed>
             <assistant_employee_person_cc>4</assistant_employee_person_cc>
             <patient_person_cc>7</patient_person_cc>
         </row>
@@ -233,14 +236,17 @@
     <payment>
         <row>
             <type>Crédito</type>
+            <ammount>300</ammount>
             <registration_registration_id>1</registration_registration_id>
         </row>
         <row>
             <type>Crédito</type>
+            <ammount>250</ammount>
             <registration_registration_id>2</registration_registration_id>
         </row>
         <row>
             <type>Numerário</type>
+            <ammount>50</ammount>
             <registration_registration_id>3</registration_registration_id>
         </row>
     </payment>
