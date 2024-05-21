@@ -528,8 +528,43 @@ def add_prescription():
 @jwt_required()
 @roles_required('patient')
 def pay_bill(bill_id):
-    # needs to verify if the bill is from the patient who is requesting it
-    return
+    current_user_id = get_jwt_identity()
+
+    # Retrieve the bill from the database
+    bill = Bill.query.get(bill_id)
+    
+    if not bill:
+        return jsonify({"error": "Bill not found"}), 404
+
+    # Verify that the bill belongs to the patient making the request
+    if bill.patient_id != current_user_id:
+        return jsonify({"error": "Unauthorized access to this bill"}), 403
+
+    # Process the payment (dummy implementation)
+    payment_amount = request.json.get('amount')
+    if not payment_amount or payment_amount <= 0:
+        return jsonify({"error": "Invalid payment amount"}), 400
+
+    if payment_amount > bill.amount_due:
+        return jsonify({"error": "Payment amount exceeds amount due"}), 400
+
+    # Update the bill's status and the amount due
+    bill.amount_due -= payment_amount
+    if bill.amount_due == 0:
+        bill.status = 'Paid'
+
+    # Record the payment
+    payment = Payment(
+        bill_id=bill_id,
+        patient_id=current_user_id,
+        amount=payment_amount,
+        payment_date=datetime.utcnow()
+    )
+
+    db.session.add(payment)
+    db.session.commit()
+
+    return jsonify({"message": "Payment successful", "bill_id": bill_id, "amount_paid": payment_amount}), 200
 
 ##
 ## Lists top 3 passients considering the money spent in the month.
