@@ -462,7 +462,7 @@ def add_prescription():
                 FROM prescription;
                 '''
     statement2 = '''
-                 SELECT MAX(medcine_id)
+                 SELECT MAX(medicine_id)
                  FROM medicine;
                  '''
     statement3 = f'''
