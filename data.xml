@@ -289,10 +289,12 @@
     </prescription>
     <medicine>
         <row>
+            <med_name>med1</med_name>
             <dosage>500mg</dosage>
             <frequency>8 in 8 hours</frequency>
         </row>
         <row>
+            <med_name>med2</med_name>
             <dosage>1000mg</dosage>
             <frequency>12 in 12 hours</frequency>
         </row>

@@ -100,6 +100,7 @@ CREATE TABLE prescription (
 
 CREATE TABLE medicine (
 	medicine_id SERIAL,
+	med_name	VARCHAR(512) NOT NULL,
 	dosage	 VARCHAR(512) NOT NULL,
 	frequency	VARCHAR(512) NOT NULL,
 	PRIMARY KEY(medicine_id)
