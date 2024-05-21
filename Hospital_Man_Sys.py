@@ -128,10 +128,10 @@ def insert_type(type):
     try:
         for table, columns, values_placeholders, values in queries:
             query = f'''
-                INSERT INTO {table} {columns}
-                VALUES ({values_placeholders})
-                ON CONFLICT DO NOTHING;
-            '''
+                    INSERT INTO {table} {columns}
+                    VALUES ({values_placeholders})
+                    ON CONFLICT DO NOTHING;
+                    '''
             cursor.execute(query, values)
 
         db.commit()
@@ -168,10 +168,6 @@ def authenticate_user():
     
     logger.debug(f'PUT /dbproj/user - payload: {payload}')
     
-    # Connecting to Data Base
-    db = db_connect()
-    cursor = db.cursor()
-    
     # Verifying name and password are in payload
     if('name' not in payload or 'password' not in payload):
         response = {'status': StatusCodes['api_error'], 'results': 'name/password not in payload'}
@@ -187,6 +183,10 @@ def authenticate_user():
                 on cc=%s
                 and name=%s;
                 '''
+
+    # Connecting to Data Base
+    db = db_connect()
+    cursor = db.cursor()
 
     try:
         for i in range(4):
@@ -426,7 +426,99 @@ def get_passient_prescriptions(person_id):
 @jwt_required()
 @roles_required('doctor')
 def add_prescription():
-    return
+    logger.info('POST /dbproj/prescription/')
+    
+    # Getting json payload
+    payload = request.get_json()
+    
+    logger.debug(f'POST /dbproj/prescription/ - payload: {payload}')
+    
+    general_fields = ['type', 'event_id', 'validity', 'medicines']
+    med_fields = ['medicine_name', 'dosage', 'frequency']
+    
+    # Verifying general fields
+    for field in general_fields:
+        if(field not in payload):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} not in payload'})
+    
+    # Verifying the inserted type
+    if(payload['type'] == 'appointment'):
+        type_id = 'appoint_id'
+    elif(payload['type'] == 'hospitalization'):
+        type_id = 'hosp_id'
+    else:
+        return jsonify({'status': StatusCodes['api_error'], 'results': f'Type in payload not regonized'})
+    
+    # Verifying medicines fields
+    i = 0
+    for medicine in payload['medicines']:
+        i += 1
+        for field in med_fields:
+            if(field not in medicine):
+                return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} not in medicine N:{i} payload'})
+    
+    statement = '''
+                SELECT MAX(prescription_id)
+                FROM prescription;
+                '''
+    statement2 = '''
+                 SELECT MAX(medcine_id)
+                 FROM medicine;
+                 '''
+    statement3 = f'''
+                  SELECT MAX({type_id})
+                  FROM {payload['type']};
+                  '''
+    queries = [('prescription', 'validity', '%s', 'CURRENT DATE')]
+    
+    # Connecting to Data Base
+    db = db_connect()
+    cursor = db.cursor()
+    
+    try:
+        cursor.execute(statement3)
+        max_event_type_id = cursor.fetchall()
+        if(int(payload['event_id']) > int(max_event_type_id[0])):
+            return jsonify({'status': StatusCodes['api_error'], 'results': 'Event id in payload does not exist'})
+        
+        cursor.execute(statement)
+        pres_id = cursor.fetchall()
+        pres_id = int(pres_id) + 1
+        pres_id = str(pres_id)
+        
+        cursor.execute(statement2)
+        med_id = cursor.fetchall()        
+        
+        for medicine in payload['medicines']:
+            med_id += 1
+            queries.append(
+                            ('medicine', '(med_name, dosage, frequency)', '%s, %s, %s', (medicine['medicine_name'], medicine['dosage'], medicine['frequency'])),
+                            ('medicine_prescription', '(medicine_medicine_id, prescription_prescription_id)', '%s, %s', (med_id, pres_id))
+                          )
+        if(payload['type'] == 'appointment'):
+            queries.append(('appointment_prescription', '(appointment_registration_registration_id, prescription_prescription_id)', '%s, %s', (payload['event_id'], pres_id)))
+        else:
+            queries.append(('hospitalization_prescription', '(hospitalization_registration_registration_id, prescription_prescription_id)', '%s, %s', (payload['event_id'], pres_id)))
+    
+        for table, columns, values_placeholders, values in queries:
+            statement = f'''
+                        INSERT INTO {table} {columns}
+                        VALUES ({values_placeholders})
+                        ON CONFLICT DO NOTHING;
+                        '''
+            cursor.execute(statement, values)
+                
+        response = {'status': StatusCodes['success'], 'results': pres_id}
+
+    except(Exception, psycopg2.DatabaseError) as error:
+        logging.error(f'POST /dbproj/prescription/ - error: {error}')
+        response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
+
+    finally:
+        if(db is not None):
+            db.close()
+
+    return jsonify(response)
 
 ##
 ## Execute a payment of an existing bill inserting the data:
