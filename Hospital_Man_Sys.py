@@ -74,7 +74,7 @@ def insert_type(type):
     # Getting json payload
     payload = request.get_json()
     
-    logger.debug(f'POST /departments - payload: {payload}')
+    logger.debug(f'POST /dbproj/register/<type> - payload: {payload}')
     
     # Fields that have to be in payload
     required_fields = ['cc', 'name', 'birthdate', 'email', 'password'] # Commun fields
@@ -166,7 +166,7 @@ def authenticate_user():
     # Getting json payload
     payload = request.get_json()
     
-    logger.debug(f'POST /departments - payload: {payload}')
+    logger.debug(f'PUT /dbproj/user - payload: {payload}')
     
     # Connecting to Data Base
     db = db_connect()
@@ -243,6 +243,9 @@ def schedule_appointment():
 @jwt_required()
 @roles_required('assistant')
 def get_patient_appointments(patient_user_id):
+    logger.info('GET /dbproj/appointments/<patient_user_id>')
+    logger.debug(f'patient_user_id: {patient_user_id}')
+    
     # Connecting to Data Base
     db = db_connect()
     cursor = db.cursor()
@@ -308,10 +311,46 @@ def shedule_new_surgery_h(hospitalization_id):
 @app.route('/dbproj/prescriptions/<person_id>', methods=['GET'])
 @jwt_required()
 def get_passient_prescriptions(person_id):
+    logger.info('GET /dbproj/prescriptions/<person_id>')
+    logger.debug(f'person_id: {person_id}')
+    
     identity = get_jwt_identity()
+    logger.debug(f'identity: {identity}')
     if(identity['role'] == 'patient' and identity['id'] != person_id):
         return jsonify({'status': StatusCodes['api_error'], 'results': 'Your id does not matchs the url id provided'})
-    return
+    
+    # Connecting to Data Base
+    db = db_connect()
+    cursor = db.cursor()
+    
+    try:
+        cursor.execute( '''
+                        
+                        ''')
+        result = cursor.fetchone()
+        
+        if(result):
+            # Convert the result to a list of dictionaries
+            appointments = []
+            for row in result:
+                appointments.append({
+                    'id': row[0],
+                    'date': row[1],
+                    'doctor_id': row[2]
+                })
+            response = {'status': StatusCodes['success'], 'results': appointments}
+        else:
+            response = {'status': StatusCodes['api_error'], 'results': 'Patient does not exist or do not have any appointments registered'}
+
+    except(Exception, psycopg2.DatabaseError) as error:
+        logging.error(f'GET /dbproj/prescriptions/<person_id> - error: {error}')
+        response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
+
+    finally:
+        if(db is not None):
+            db.close()
+
+    return jsonify(response)
 
 ##
 ## Adds a new prescription inserting the data:

@@ -281,18 +281,20 @@
          *********************************** -->
     <prescription>
         <row>
-            <prescription_id>1</prescription_id>
+            <validity>2025-09-23</validity>
         </row>
         <row>
-            <prescription_id>2</prescription_id>
+            <validity>2025-10-08</validity>
         </row>
     </prescription>
     <medicine>
         <row>
             <dosage>500mg</dosage>
+            <frequency>8 in 8 hours</frequency>
         </row>
         <row>
             <dosage>1000mg</dosage>
+            <frequency>12 in 12 hours</frequency>
         </row>
     </medicine>
     <sideefect>

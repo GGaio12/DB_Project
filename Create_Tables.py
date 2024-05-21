@@ -85,6 +85,7 @@ CREATE TABLE equip (
 
 CREATE TABLE registration (
 	registration_id		 SERIAL,
+	regist_date	TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	bill			 DOUBLE PRECISION NOT NULL,
 	assistant_employee_person_cc INTEGER NOT NULL,
 	patient_person_cc		 INTEGER NOT NULL,
@@ -93,12 +94,14 @@ CREATE TABLE registration (
 
 CREATE TABLE prescription (
 	prescription_id SERIAL,
+	validity	DATE NOT NULL,
 	PRIMARY KEY(prescription_id)
 );
 
 CREATE TABLE medicine (
 	medicine_id SERIAL,
-	dosage	 VARCHAR(512),
+	dosage	 VARCHAR(512) NOT NULL,
+	frequency	VARCHAR(512) NOT NULL,
 	PRIMARY KEY(medicine_id)
 );
 

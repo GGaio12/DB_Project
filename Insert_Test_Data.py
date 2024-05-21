@@ -6,30 +6,25 @@ import bcrypt
 
 # Function to insert data into the database
 def insert_data(table_name, columns, data, cursor):
-    # If table is prescription just add a prescription_id with auto-increment (SERIAL)
-    if(table_name == 'prescription'):
-        for _ in data.iterrows():
-            cursor.execute(""" INSERT INTO prescription DEFAULT VALUES; """)
-    else:
-        # Removing from columns the columns that are SERIAL type.
-        serial_columns = get_serial_columns(table_name, cursor)
-        columns = [col for col in columns if col not in serial_columns]
-        # Constructing query to send
-        insert_query = """
-            INSERT INTO {} ({})
-            VALUES ({})
-            ON CONFLICT DO NOTHING;
-        """.format(
-            table_name,
-            ', '.join(columns),
-            ', '.join(['%s'] * len(columns))
-        )
-        # Executing query with the given values
-        for _, row in data.iterrows():
-            values = tuple(row[col] for col in columns)
-            if table_name == 'person':
-                values = hash_password_in_person(values, columns)
-            cursor.execute(insert_query, convert_types(values))
+    # Removing from columns the columns that are SERIAL type.
+    serial_columns = get_serial_columns(table_name, cursor)
+    columns = [col for col in columns if col not in serial_columns]
+    # Constructing query to send
+    insert_query = """
+        INSERT INTO {} ({})
+        VALUES ({})
+        ON CONFLICT DO NOTHING;
+    """.format(
+        table_name,
+        ', '.join(columns),
+        ', '.join(['%s'] * len(columns))
+    )
+    # Executing query with the given values
+    for _, row in data.iterrows():
+        values = tuple(row[col] for col in columns)
+        if table_name == 'person':
+            values = hash_password_in_person(values, columns)
+        cursor.execute(insert_query, convert_types(values))
 
 # Function to get SERIAL columns
 def get_serial_columns(table_name, cursor):
