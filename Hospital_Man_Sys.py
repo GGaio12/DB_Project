@@ -68,8 +68,13 @@ def landing_page():
 ##
 @app.route('/dbproj/register/<type>', methods=['POST'])
 def insert_type(type):
+    logger.info('POST /dbproj/register/<type>')
+    logger.debug(f'type: {type}')
+    
     # Getting json payload
     payload = request.get_json()
+    
+    logger.debug(f'POST /departments - payload: {payload}')
     
     # Fields that have to be in payload
     required_fields = ['cc', 'name', 'birthdate', 'email', 'password'] # Commun fields
@@ -145,7 +150,7 @@ def insert_type(type):
         response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
 
     finally:
-        if db:
+        if(db is not None):
             db.close()
 
     return jsonify(response)
@@ -156,8 +161,12 @@ def insert_type(type):
 ##
 @app.route('/dbproj/user', methods=['PUT'])
 def authenticate_user():
+    logger.info('PUT /dbproj/user')
+    
     # Getting json payload
     payload = request.get_json()
+    
+    logger.debug(f'POST /departments - payload: {payload}')
     
     # Connecting to Data Base
     db = db_connect()
@@ -240,17 +249,26 @@ def get_patient_appointments(patient_user_id):
     
     try:
         cursor.execute( '''
-                        SELECT appoint_id "id", appoint_date "date", doctor_employee_person_cc "doctor_cc"
-                        FROM appointment as ap, equip, registration as reg, patient, person
+                        SELECT appoint_id "id", appoint_date "date", p2.id "doctor_id"
+                        FROM appointment as ap, equip, registration as reg, person as p1, person as p2
                         WHERE ap.equip_equip_id=equip.equip_id
+                        AND doctor_employee_person_cc=p2.cc
                         AND ap.registration_registration_id=reg.registration_id
-                        AND reg.patient_person_cc=patient.person_cc
-                        AND patient.person_cc=person.cc
-                        AND person.id=%s;             
+                        AND reg.patient_person_cc=p1.cc
+                        AND p1.id=%s;             
                         ''', (patient_user_id,))
         result = cursor.fetchone()
+        
         if(result):
-            response = {'status': StatusCodes['success'], 'results': result}
+            # Convert the result to a list of dictionaries
+            appointments = []
+            for row in result:
+                appointments.append({
+                    'id': row[0],
+                    'date': row[1],
+                    'doctor_id': row[2]
+                })
+            response = {'status': StatusCodes['success'], 'results': appointments}
         else:
             response = {'status': StatusCodes['api_error'], 'results': 'Patient does not exist or do not have any appointments registered'}
 
@@ -259,7 +277,7 @@ def get_patient_appointments(patient_user_id):
         response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
 
     finally:
-        if db:
+        if(db is not None):
             db.close()
 
     return jsonify(response)
