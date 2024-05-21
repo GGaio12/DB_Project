@@ -319,26 +319,92 @@ def get_passient_prescriptions(person_id):
     if(identity['role'] == 'patient' and identity['id'] != person_id):
         return jsonify({'status': StatusCodes['api_error'], 'results': 'Your id does not matchs the url id provided'})
     
+    statement =  '''
+                SELECT 
+                    prescription_id AS "id", 
+                    validity, 
+                    med_name AS "medicine name", 
+                    dosage, 
+                    frequency
+                FROM 
+                    prescription AS pres
+                JOIN 
+                    medicine_prescription AS med_pres ON pres.prescription_id = med_pres.prescription_prescription_id
+                JOIN 
+                    medicine AS med ON med_pres.medicine_medicine_id = med.medicine_id
+                JOIN 
+                    hospitalization_prescription AS hosp_pres ON pres.prescription_id = hosp_pres.prescription_prescription_id
+                JOIN 
+                    hospitalization AS hosp ON hosp_pres.hospitalization_registration_registration_id = hosp.registration_registration_id
+                JOIN 
+                    registration AS reg ON hosp.registration_registration_id = reg.registration_id
+                JOIN 
+                    person AS p ON reg.patient_person_cc = p.cc
+                WHERE 
+                    p.id = %(person_id)s
+
+                UNION
+
+                SELECT 
+                    prescription_id AS "id", 
+                    validity, 
+                    med_name AS "medicine name", 
+                    dosage, 
+                    frequency
+                FROM 
+                    prescription AS pres
+                JOIN 
+                    medicine_prescription AS med_pres ON pres.prescription_id = med_pres.prescription_prescription_id
+                JOIN 
+                    medicine AS med ON med_pres.medicine_medicine_id = med.medicine_id
+                JOIN 
+                    appointment_prescription AS ap_pres ON pres.prescription_id = ap_pres.prescription_prescription_id
+                JOIN 
+                    appointment AS ap ON ap_pres.appointment_registration_registration_id = ap.registration_registration_id
+                JOIN 
+                    registration AS reg ON ap.registration_registration_id = reg.registration_id
+                JOIN 
+                    person AS p ON reg.patient_person_cc = p.cc
+                WHERE 
+                    p.id = %(person_id)s;
+                '''
+    params = {'person_id': person_id}
+    
     # Connecting to Data Base
     db = db_connect()
     cursor = db.cursor()
     
     try:
-        cursor.execute( '''
-                        
-                        ''')
+        cursor.execute(statement, params)
         result = cursor.fetchone()
         
         if(result):
             # Convert the result to a list of dictionaries
-            appointments = []
+            prescriptions = []
+            presc_id = 0
             for row in result:
-                appointments.append({
-                    'id': row[0],
-                    'date': row[1],
-                    'doctor_id': row[2]
+                if(presc_id != row[0]):
+                    if(presc_id != 0):
+                        prescriptions.append({
+                            'id': presc_id,
+                            'validity': row[1],
+                            'posology': medicines
+                        })
+                    presc_id = row[0]
+                    medicines = []
+                medicines.append({
+                    'medicine name': row[2],
+                    'dosage': row[3],
+                    'frequency': row[4]
                 })
-            response = {'status': StatusCodes['success'], 'results': appointments}
+                
+            prescriptions.append({
+                'id': presc_id,
+                'validity': row[1],
+                'posology': medicines
+            })
+                
+            response = {'status': StatusCodes['success'], 'results': prescriptions}
         else:
             response = {'status': StatusCodes['api_error'], 'results': 'Patient does not exist or do not have any appointments registered'}
 
