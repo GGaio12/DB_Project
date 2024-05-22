@@ -598,11 +598,19 @@ def list_daily_summary(year_month_day):
         cursor.execute(statement, (year_month_day,))
         result = cursor.fetchall()
         
+        if result:
+            total_registered_bill = result[0][0] if result[0][0] is not None else 0
+            total_amount_paid = result[0][1] if result[0][1] is not None else 0
+            total_agended_surgeries = result[0][2] if result[0][2] is not None else 0
+            total_prescriptions_writed = result[0][3] if result[0][3] is not None else 0
+        else:
+            total_registered_bill = total_amount_paid = total_agended_surgeries = total_prescriptions_writed = 0
+        
         response = {'status': StatusCodes['success'], 'results': {
-                    'Total Registed Bill': result[0],
-                    'Total Ammount Payed': result[1],
-                    'Total Agended Surgeries': result[2],
-                    'Total Prescriptions Writed': result[3]
+                    'Total Registed Bill': total_registered_bill,
+                    'Total Ammount Payed': total_amount_paid,
+                    'Total Agended Surgeries': total_agended_surgeries,
+                    'Total Prescriptions Writed': total_prescriptions_writed
                   }}
         
     except(Exception, psycopg2.DatabaseError) as error:
