@@ -538,7 +538,8 @@ def pay_bill(bill_id):
     cursor = db.cursor()
 
     try:
-        # Check if the bill exists and belongs to the current user
+        # SE EXISTE
+        # SE PERTENCE AO RESPETIVO ID
         cursor.execute("""
             SELECT bill, bill_payed
             FROM registration
@@ -555,7 +556,7 @@ def pay_bill(bill_id):
         if bill_payed:
             return jsonify({'status': 'error', 'results': 'Bill is already paid'}), 400
         
-        # Insert the payment record
+        #PROCESSAR PAGAMENTO
         cursor.execute("""
             INSERT INTO payment (amount, type, registration_registration_id)
             VALUES (%s, %s, %s)
@@ -564,7 +565,7 @@ def pay_bill(bill_id):
         
         payment_id = cursor.fetchone()[0]
         
-        # Check the total paid amount
+        # VERIFCAR VALOR PAGO
         cursor.execute("""
             SELECT COALESCE(SUM(amount), 0)
             FROM payment
@@ -573,7 +574,7 @@ def pay_bill(bill_id):
         
         total_paid = cursor.fetchone()[0]
         
-        # Update the bill status if fully paid
+        # mUDAR bill_payed PARA TRUE
         if total_paid >= bill_amount:
             cursor.execute("""
                 UPDATE registration
