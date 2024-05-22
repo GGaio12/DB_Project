@@ -525,14 +525,14 @@ def pay_bill(bill_id):
     # Verifying required fields in payload
     for field in required_fields:
         if field not in payload:
-            return jsonify({'status': 'error', 'results': f'{field} not in payload'}), 400
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} not in payload'})
 
     amount = payload['amount']
     payment_type = payload['type']
     
     # Ensure amount is a positive number
     if amount <= 0:
-        return jsonify({'status': 'error', 'results': 'Amount must be greater than zero'}), 400
+        return jsonify({'status': StatusCodes['api_error'], 'results': 'Amount must be greater than zero'})
     
     # Connecting to Data Base
     db = db_connect()
@@ -541,21 +541,22 @@ def pay_bill(bill_id):
     try:
         # SE EXISTE
         # SE PERTENCE AO RESPETIVO ID
+        identity = get_jwt_identity()
         cursor.execute("""
             SELECT bill, bill_payed
             FROM registration
             WHERE registration_id = %s AND patient_person_cc = %s
-        """, (bill_id, get_jwt_identity()))
+        """, (bill_id, identity['id']))
         
         bill_info = cursor.fetchone()
         
         if not bill_info:
-            return jsonify({'status': 'error', 'results': 'Bill not found or access denied'}), 404
+            return jsonify({'status': StatusCodes['api_error'], 'results': 'Bill not found or access denied'})
         
         bill_amount, bill_payed = bill_info
         
         if bill_payed:
-            return jsonify({'status': 'error', 'results': 'Bill is already paid'}), 400
+            return jsonify({'status': StatusCodes['api_error'], 'results': 'Bill is already paid'})
         
         #PROCESSAR PAGAMENTO
         cursor.execute("""
@@ -585,13 +586,13 @@ def pay_bill(bill_id):
         
         db.commit()
         
-        response = {'status': 'success', 'results': {'payment_id': payment_id}}
+        response = {'status': StatusCodes['success'], 'results': {'payment_id': payment_id}}
         
     except (Exception, psycopg2.DatabaseError) as error:
         logger.error(f'POST /dbproj/bills/{bill_id} - error: {error}')
         if db:
             db.rollback()
-        response = {'status': 'internal_error', 'errors': str(error)}
+        response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
     
     finally:
         if db:
