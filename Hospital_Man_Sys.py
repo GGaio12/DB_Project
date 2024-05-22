@@ -2,6 +2,7 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from flask import Flask, request, jsonify
 from DB_Connection import db_connect
 from flask_bcrypt import Bcrypt
+from datetime import datetime
 from functools import wraps
 import psycopg2
 import logging
@@ -22,7 +23,7 @@ StatusCodes = {
     'internal_error': 500
 }
 
-# Custom decorator for role-based access control
+# Custom decorator for role-based access control.
 def roles_required(*roles):
     def wrapper(fn):
         @wraps(fn)
@@ -33,6 +34,16 @@ def roles_required(*roles):
             return fn(*args, **kwargs)
         return decorator
     return wrapper
+
+# Help function to confirm data is in date like format.
+def is_valid_date(date_string):
+    try:
+        # Try to parse the string with the given format
+        datetime.strptime(date_string, '%Y-%m-%d')
+        return True
+    except ValueError:
+        # If parsing fails, it's not a valid date
+        return False
 
 
 ##########################################################
@@ -396,7 +407,8 @@ def get_passient_prescriptions(person_id):
 
 ##
 ## Adds a new prescription inserting the data:
-##   --> TODOO!!!
+## 'type', 'event_id', 'validity', 'medicines'
+## NOTE: 'medicines' is a list of medicines each containing: 'medicine_name', 'dosage', 'frequency'
 ##
 @app.route('/dbproj/prescription/', methods=['POST'])
 @jwt_required()
@@ -550,11 +562,58 @@ def get_top3_passients():
 ##
 ## Daily summary. Lists a count for all hospitalizations details of a day.
 ##
-@app.route('/dbproj/daily/<year-month-day>', methods=['GET'])
+@app.route('/dbproj/daily/<year_month_day>', methods=['GET'])
 @jwt_required()
 @roles_required('assistant')
-def list_daily_summary(time_stamp):
-    return
+def list_daily_summary(year_month_day):
+    #  {“status”: status_code, “errors”: errors (if any occurs), “results”: {“amount_spent”: 
+    # value, “surgeries”: count, “prescriptions”: count}}
+    logger.info('GET /dbproj/daily/<year_month_day>')
+    logger.debug(f'GET /dbproj/daily/<year_month_day> - year_month_day: {year_month_day}')
+    
+    # Verifying the date inserted in URL
+    if(not is_valid_date(year_month_day)):
+        return jsonify({'status': StatusCodes['api_error'], 'results': f'Date in URL not correct. USE format: YYYY-MM-DD'})
+    
+    statement = '''
+                SELECT
+                    SUM(bill) AS "Total Registed Bill",
+                    SUM(ammount) AS "Total Ammount Payed",
+                    COUNT(sur_id) AS "Total Agended Surgeries",
+                    COUNT(prescription_prescription_id) AS "Total Prescriptions Writed"
+                FROM hospitalization AS hos
+                LEFT JOIN registration AS reg ON reg.registration_id = hos.registration_registration_id
+                LEFT JOIN payment AS pay ON reg.registration_id = pay.registration_registration_id
+                LEFT JOIN surgery AS sur ON reg.registration_id = sur.hospitalization_registration_registration_id
+                LEFT JOIN hospitalization_prescription AS hosp_pres ON hos.registration_registration_id = hosp_pres.hospitalization_registration_registration_id
+                WHERE DATE(reg.regist_date) = %s;
+                '''
+    
+    # Connecting to Data Base
+    db = db_connect()
+    cursor = db.cursor()
+    
+    try:
+        # Executing the query
+        cursor.execute(statement, (year_month_day,))
+        result = cursor.fetchall()
+        
+        response = {'status': StatusCodes['success'], 'results': {
+                    'Total Registed Bill': result[0],
+                    'Total Ammount Payed': result[1],
+                    'Total Agended Surgeries': result[2],
+                    'Total Prescriptions Writed': result[3]
+                  }}
+        
+    except(Exception, psycopg2.DatabaseError) as error:
+        logging.error(f'GET /dbproj/daily/<year_month_day> - error: {error}')
+        response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
+
+    finally:
+        if(db is not None):
+            db.close()
+
+    return jsonify(response)
 
 ##
 ## Generates a monthly report where are listed the doctors with more surgeries
