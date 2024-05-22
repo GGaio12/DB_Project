@@ -512,6 +512,92 @@ def add_prescription():
 @jwt_required()
 @roles_required('patient')
 def pay_bill(bill_id):
+    logger.info(f'POST /dbproj/bills/{bill_id}')
+    
+    # Getting json payload
+    payload = request.get_json()
+    logger.debug(f'POST /dbproj/bills/{bill_id} - payload: {payload}')
+    
+    # Required fields for payment
+    required_fields = ['amount', 'type']
+    
+    # Verifying required fields in payload
+    for field in required_fields:
+        if field not in payload:
+            return jsonify({'status': 'error', 'results': f'{field} not in payload'}), 400
+
+    amount = payload['amount']
+    payment_type = payload['type']
+    
+    # Ensure amount is a positive number
+    if amount <= 0:
+        return jsonify({'status': 'error', 'results': 'Amount must be greater than zero'}), 400
+    
+    # Connecting to Data Base
+    db = db_connect()
+    cursor = db.cursor()
+
+    try:
+        # Check if the bill exists and belongs to the current user
+        cursor.execute("""
+            SELECT bill, bill_payed
+            FROM registration
+            WHERE registration_id = %s AND patient_person_cc = %s
+        """, (bill_id, get_jwt_identity()))
+        
+        bill_info = cursor.fetchone()
+        
+        if not bill_info:
+            return jsonify({'status': 'error', 'results': 'Bill not found or access denied'}), 404
+        
+        bill_amount, bill_payed = bill_info
+        
+        if bill_payed:
+            return jsonify({'status': 'error', 'results': 'Bill is already paid'}), 400
+        
+        # Insert the payment record
+        cursor.execute("""
+            INSERT INTO payment (amount, type, registration_registration_id)
+            VALUES (%s, %s, %s)
+            RETURNING payment_id
+        """, (amount, payment_type, bill_id))
+        
+        payment_id = cursor.fetchone()[0]
+        
+        # Check the total paid amount
+        cursor.execute("""
+            SELECT COALESCE(SUM(amount), 0)
+            FROM payment
+            WHERE registration_registration_id = %s
+        """, (bill_id,))
+        
+        total_paid = cursor.fetchone()[0]
+        
+        # Update the bill status if fully paid
+        if total_paid >= bill_amount:
+            cursor.execute("""
+                UPDATE registration
+                SET bill_payed = TRUE
+                WHERE registration_id = %s
+            """, (bill_id,))
+        
+        db.commit()
+        
+        response = {'status': 'success', 'results': {'payment_id': payment_id}}
+        
+    except (Exception, psycopg2.DatabaseError) as error:
+        logger.error(f'POST /dbproj/bills/{bill_id} - error: {error}')
+        if db:
+            db.rollback()
+        response = {'status': 'internal_error', 'errors': str(error)}
+    
+    finally:
+        if db:
+            db.close()
+    
+    return jsonify(response), 200 if response['status'] == 'success' else 500
+
+
     
 ##
 ## Lists top 3 passients considering the money spent in the month.
