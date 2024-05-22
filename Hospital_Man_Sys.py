@@ -2,6 +2,7 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from flask import Flask, request, jsonify
 from DB_Connection import db_connect
 from flask_bcrypt import Bcrypt
+from datetime import datetime
 from functools import wraps
 import psycopg2
 import logging
@@ -22,7 +23,7 @@ StatusCodes = {
     'internal_error': 500
 }
 
-# Custom decorator for role-based access control
+# Custom decorator for role-based access control.
 def roles_required(*roles):
     def wrapper(fn):
         @wraps(fn)
@@ -33,6 +34,16 @@ def roles_required(*roles):
             return fn(*args, **kwargs)
         return decorator
     return wrapper
+
+# Help function to confirm data is in date like format.
+def is_valid_date(date_string):
+    try:
+        # Try to parse the string with the given format
+        datetime.strptime(date_string, '%Y-%m-%d')
+        return True
+    except ValueError:
+        # If parsing fails, it's not a valid date
+        return False
 
 
 ##########################################################
@@ -150,7 +161,7 @@ def insert_type(type):
         response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
 
     finally:
-        if(db is not None):
+        if db is not None:
             db.close()
 
     return jsonify(response)
@@ -225,7 +236,7 @@ def authenticate_user():
         response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
 
     finally:
-        if(db is not None):
+        if db is not None:
             db.close()
 
     return jsonify(response)
@@ -284,7 +295,7 @@ def get_patient_appointments(patient_user_id):
         response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
 
     finally:
-        if(db is not None):
+        if db is not None:
             db.close()
 
     return jsonify(response)
@@ -389,14 +400,15 @@ def get_passient_prescriptions(person_id):
         response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
 
     finally:
-        if(db is not None):
+        if db is not None:
             db.close()
 
     return jsonify(response)
 
 ##
 ## Adds a new prescription inserting the data:
-##   --> TODOO!!!
+## 'type', 'event_id', 'validity', 'medicines'
+## NOTE: 'medicines' is a list of medicines each containing: 'medicine_name', 'dosage', 'frequency'
 ##
 @app.route('/dbproj/prescription/', methods=['POST'])
 @jwt_required()
@@ -487,7 +499,7 @@ def add_prescription():
         response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
 
     finally:
-        if(db is not None):
+        if db is not None:
             db.close()
 
     return jsonify(response)
@@ -513,21 +525,131 @@ def get_top3_passients():
 ##
 ## Daily summary. Lists a count for all hospitalizations details of a day.
 ##
-@app.route('/dbproj/daily/<year-month-day>', methods=['GET'])
+@app.route('/dbproj/daily/<year_month_day>', methods=['GET'])
 @jwt_required()
 @roles_required('assistant')
-def list_daily_summary(time_stamp):
-    return
+def list_daily_summary(year_month_day):
+    logger.info('GET /dbproj/daily/<year_month_day>')
+    logger.debug(f'GET /dbproj/daily/<year_month_day> - year_month_day: {year_month_day}')
+    
+    # Verifying the date inserted in URL
+    if(not is_valid_date(year_month_day)):
+        return jsonify({'status': StatusCodes['api_error'], 'results': f'Date in URL not correct. USE format: YYYY-MM-DD'})
+    
+    statement = '''
+                SELECT
+                    SUM(bill) AS "Total Registed Bill",
+                    SUM(ammount) AS "Total Ammount Payed",
+                    COUNT(sur_id) AS "Total Agended Surgeries",
+                    COUNT(prescription_prescription_id) AS "Total Prescriptions Writed"
+                FROM hospitalization AS hos
+                LEFT JOIN registration AS reg ON reg.registration_id = hos.registration_registration_id
+                LEFT JOIN payment AS pay ON reg.registration_id = pay.registration_registration_id
+                LEFT JOIN surgery AS sur ON reg.registration_id = sur.hospitalization_registration_registration_id
+                LEFT JOIN hospitalization_prescription AS hosp_pres ON hos.registration_registration_id = hosp_pres.hospitalization_registration_registration_id
+                WHERE DATE(reg.regist_date) = %s;
+                '''
+    
+    # Connecting to Data Base
+    db = db_connect()
+    cursor = db.cursor()
+    
+    try:
+        # Executing the query
+        cursor.execute(statement, (year_month_day,))
+        result = cursor.fetchall()
+        
+        if result:
+            total_registered_bill = result[0][0] if result[0][0] is not None else 0
+            total_amount_paid = result[0][1] if result[0][1] is not None else 0
+            total_agended_surgeries = result[0][2] if result[0][2] is not None else 0
+            total_prescriptions_writed = result[0][3] if result[0][3] is not None else 0
+        else:
+            total_registered_bill = total_amount_paid = total_agended_surgeries = total_prescriptions_writed = 0
+        
+        response = {'status': StatusCodes['success'], 'results': {
+                    'Total Registed Bill': total_registered_bill,
+                    'Total Ammount Payed': total_amount_paid,
+                    'Total Agended Surgeries': total_agended_surgeries,
+                    'Total Prescriptions Writed': total_prescriptions_writed
+                  }}
+        
+    except(Exception, psycopg2.DatabaseError) as error:
+        logging.error(f'GET /dbproj/daily/<year_month_day> - error: {error}')
+        response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
+
+    finally:
+        if db is not None:
+            db.close()
+
+    return jsonify(response)
 
 ##
 ## Generates a monthly report where are listed the doctors with more surgeries
-## in each month for the 12 months.
+## in each month for the last 12 months.
+## NOTE: The current month is not included.
 ##
 @app.route('/dbproj/report', methods=['GET'])
 @jwt_required()
 @roles_required('assistant')
 def generate_monthly_report():
-    return
+    logger.info('GET /dbproj/report')
+    
+    statement = '''
+                WITH MonthlySurgeryCount AS (
+                    SELECT
+                        EXTRACT(YEAR FROM s.date) AS year,
+                        EXTRACT(MONTH FROM s.date) AS month,
+                        e.doctor_employee_person_cc AS doctor_id,
+                        COUNT(*) AS surgery_count,
+                        ROW_NUMBER() OVER (PARTITION BY EXTRACT(YEAR FROM s.date), EXTRACT(MONTH FROM s.date) ORDER BY COUNT(*) DESC) AS rank
+                    FROM surgery s
+                    INNER JOIN equip e ON s.equip_equip_id = e.equip_id
+                    WHERE
+                        s.date >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '12 months' AND
+                        s.date <= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 day'
+                    GROUP BY
+                        EXTRACT(YEAR FROM s.date),
+                        EXTRACT(MONTH FROM s.date),
+                        e.doctor_employee_person_cc
+                )
+                SELECT
+                    to_char(to_date(concat(msc.year::text, '-', msc.month::text, '-01'), 'YYYY-MM-DD'), 'Month YYYY') AS month_year,
+                    p.name AS doctor_name,
+                    msc.surgery_count AS surgery_count
+                FROM MonthlySurgeryCount msc
+                INNER JOIN person p ON msc.doctor_id = p.cc
+                WHERE msc.rank = 1
+                ORDER BY msc.year DESC, msc.month DESC;
+                '''
+    
+    # Connecting to Data Base
+    db = db_connect()
+    cursor = db.cursor()
+
+    try:
+        # Executing the query
+        cursor.execute(statement)
+        result = cursor.fetchall()
+        
+        monthly_rep = []
+        for row in result:
+            monthly_rep.append({
+                'year-month': row[0],
+                'doctor': row[1],
+                'number of surgeries': row[2]
+            })
+        response = {'status': StatusCodes['success'], 'results': monthly_rep}    
+        
+    except(Exception, psycopg2.DatabaseError) as error:
+        logging.error(f'GET /dbproj/report - error: {error}')
+        response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
+
+    finally:
+        if db is not None:
+            db.close()
+
+    return jsonify(response)
 
 
 if __name__ == '__main__':

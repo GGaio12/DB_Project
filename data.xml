@@ -59,6 +59,27 @@
             <password>8901</password>
             <email>ricardobraga@mail.com</email>
         </row>
+        <row>
+            <cc>9</cc>
+            <name>Abel Cabral</name>
+            <birthdate>1975-06-08</birthdate>
+            <password>9012</password>
+            <email>abelcabral@mail.com</email>
+        </row>
+        <row>
+            <cc>10</cc>
+            <name>Fátima Fernandes</name>
+            <birthdate>1959-12-17</birthdate>
+            <password>9712</password>
+            <email>fatimafernandes@mail.com</email>
+        </row>
+        <row>
+            <cc>11</cc>
+            <name>Mariana Costa</name>
+            <birthdate>1992-02-21</birthdate>
+            <password>9912</password>
+            <email>marianacosta@mail.com</email>
+        </row>
     </person>
     
     <!-- ***********************************
@@ -73,6 +94,12 @@
         </row>
         <row>
             <person_cc>7</person_cc>
+        </row>
+        <row>
+            <person_cc>10</person_cc>
+        </row>
+        <row>
+            <person_cc>11</person_cc>
         </row>
     </patient>
 
@@ -95,6 +122,9 @@
         <row>
             <person_cc>8</person_cc>
         </row>
+        <row>
+            <person_cc>9</person_cc>
+        </row>
     </employee>
     <nurse>
         <row>
@@ -112,6 +142,10 @@
         <row>
             <medical_license>23456</medical_license>
             <employee_person_cc>8</employee_person_cc>
+        </row>
+        <row>
+            <medical_license>34567</medical_license>
+            <employee_person_cc>9</employee_person_cc>
         </row>
     </doctor>
     <assistant>
@@ -155,6 +189,13 @@
             <work_hours>40</work_hours>
             <employee_person_cc>4</employee_person_cc>
         </row>
+        <row>
+            <start_date>2024-01-01</start_date>
+            <end_date>2026-01-01</end_date>
+            <sal>17000</sal>
+            <work_hours>32</work_hours>
+            <employee_person_cc>9</employee_person_cc>
+        </row>
     </contract>
 
     <!-- ***********************************
@@ -168,6 +209,10 @@
         <row>
             <name>Neurocirurgião</name>
             <doctor_employee_person_cc>8</doctor_employee_person_cc>
+        </row>
+        <row>
+            <name>Oftalmologista</name>
+            <doctor_employee_person_cc>9</doctor_employee_person_cc>
         </row>
     </specialization>
     <sup_specialization>
@@ -205,6 +250,18 @@
             <assistant_employee_person_cc>4</assistant_employee_person_cc>
             <patient_person_cc>7</patient_person_cc>
         </row>
+        <row>
+            <bill>700.0</bill>
+            <bill_payed>TRUE</bill_payed>
+            <assistant_employee_person_cc>4</assistant_employee_person_cc>
+            <patient_person_cc>10</patient_person_cc>
+        </row>
+        <row>
+            <bill>1000.0</bill>
+            <bill_payed>TRUE</bill_payed>
+            <assistant_employee_person_cc>4</assistant_employee_person_cc>
+            <patient_person_cc>11</patient_person_cc>
+        </row>
     </registration>
     <appointment>
         <row>
@@ -224,23 +281,153 @@
             <nurse_employee_person_cc>5</nurse_employee_person_cc>
             <registration_registration_id>2</registration_registration_id>
         </row>
+        <row>
+            <room_num>103</room_num>
+            <nurse_employee_person_cc>2</nurse_employee_person_cc>
+            <registration_registration_id>4</registration_registration_id>
+        </row>
+        <row>
+            <room_num>104</room_num>
+            <nurse_employee_person_cc>5</nurse_employee_person_cc>
+            <registration_registration_id>5</registration_registration_id>
+        </row>
     </hospitalization>
     <surgery>
         <row>
+            <date>2024-10-07</date>
             <operating_room>OR1</operating_room>
             <surgerytype_sur_type_id>1</surgerytype_sur_type_id>
             <equip_equip_id>1</equip_equip_id>
             <hospitalization_registration_registration_id>2</hospitalization_registration_registration_id>
         </row>
+        <row>
+            <date>2024-05-14</date>
+            <operating_room>OR1</operating_room>
+            <surgerytype_sur_type_id>2</surgerytype_sur_type_id>
+            <equip_equip_id>2</equip_equip_id>
+            <hospitalization_registration_registration_id>5</hospitalization_registration_registration_id>
+        </row>
+        <row>
+            <date>2024-04-27</date>
+            <operating_room>OR2</operating_room>
+            <surgerytype_sur_type_id>2</surgerytype_sur_type_id>
+            <equip_equip_id>2</equip_equip_id>
+            <hospitalization_registration_registration_id>5</hospitalization_registration_registration_id>
+        </row>
+        <row>
+            <date>2024-03-05</date>
+            <operating_room>OR2</operating_room>
+            <surgerytype_sur_type_id>2</surgerytype_sur_type_id>
+            <equip_equip_id>2</equip_equip_id>
+            <hospitalization_registration_registration_id>5</hospitalization_registration_registration_id>
+        </row>
+        <row>
+            <date>2024-02-07</date>
+            <operating_room>OR2</operating_room>
+            <surgerytype_sur_type_id>3</surgerytype_sur_type_id>
+            <equip_equip_id>3</equip_equip_id>
+            <hospitalization_registration_registration_id>5</hospitalization_registration_registration_id>
+        </row>
+        <row>
+            <date>2024-01-30</date>
+            <operating_room>OR3</operating_room>
+            <surgerytype_sur_type_id>3</surgerytype_sur_type_id>
+            <equip_equip_id>3</equip_equip_id>
+            <hospitalization_registration_registration_id>5</hospitalization_registration_registration_id>
+        </row>
+        <row>
+            <date>2023-12-03</date>
+            <operating_room>OR3</operating_room>
+            <surgerytype_sur_type_id>3</surgerytype_sur_type_id>
+            <equip_equip_id>3</equip_equip_id>
+            <hospitalization_registration_registration_id>5</hospitalization_registration_registration_id>
+        </row>
+        <row>
+            <date>2023-11-19</date>
+            <operating_room>OR3</operating_room>
+            <surgerytype_sur_type_id>3</surgerytype_sur_type_id>
+            <equip_equip_id>3</equip_equip_id>
+            <hospitalization_registration_registration_id>5</hospitalization_registration_registration_id>
+        </row>
+        <row>
+            <date>2023-10-07</date>
+            <operating_room>OR3</operating_room>
+            <surgerytype_sur_type_id>3</surgerytype_sur_type_id>
+            <equip_equip_id>3</equip_equip_id>
+            <hospitalization_registration_registration_id>5</hospitalization_registration_registration_id>
+        </row>
+        <row>
+            <date>2023-09-22</date>
+            <operating_room>OR3</operating_room>
+            <surgerytype_sur_type_id>3</surgerytype_sur_type_id>
+            <equip_equip_id>3</equip_equip_id>
+            <hospitalization_registration_registration_id>5</hospitalization_registration_registration_id>
+        </row>
+        <row>
+            <date>2023-08-19</date>
+            <operating_room>OR3</operating_room>
+            <surgerytype_sur_type_id>3</surgerytype_sur_type_id>
+            <equip_equip_id>3</equip_equip_id>
+            <hospitalization_registration_registration_id>5</hospitalization_registration_registration_id>
+        </row>
+        <row>
+            <date>2023-07-15</date>
+            <operating_room>OR1</operating_room>
+            <surgerytype_sur_type_id>1</surgerytype_sur_type_id>
+            <equip_equip_id>1</equip_equip_id>
+            <hospitalization_registration_registration_id>4</hospitalization_registration_registration_id>
+        </row>
+        <row>
+            <date>2023-06-27</date>
+            <operating_room>OR1</operating_room>
+            <surgerytype_sur_type_id>1</surgerytype_sur_type_id>
+            <equip_equip_id>1</equip_equip_id>
+            <hospitalization_registration_registration_id>4</hospitalization_registration_registration_id>
+        </row>
+        <row>
+            <date>2023-05-30</date>
+            <operating_room>OR1</operating_room>
+            <surgerytype_sur_type_id>2</surgerytype_sur_type_id>
+            <equip_equip_id>2</equip_equip_id>
+            <hospitalization_registration_registration_id>4</hospitalization_registration_registration_id>
+        </row>
+        <row>
+            <date>2023-10-01</date>
+            <operating_room>OR2</operating_room>
+            <surgerytype_sur_type_id>2</surgerytype_sur_type_id>
+            <equip_equip_id>2</equip_equip_id>
+            <hospitalization_registration_registration_id>4</hospitalization_registration_registration_id>
+        </row>
+        <row>
+            <date>2023-11-10</date>
+            <operating_room>OR2</operating_room>
+            <surgerytype_sur_type_id>2</surgerytype_sur_type_id>
+            <equip_equip_id>2</equip_equip_id>
+            <hospitalization_registration_registration_id>4</hospitalization_registration_registration_id>
+        </row>
+        <row>
+            <date>2024-02-02</date>
+            <operating_room>OR2</operating_room>
+            <surgerytype_sur_type_id>3</surgerytype_sur_type_id>
+            <equip_equip_id>3</equip_equip_id>
+            <hospitalization_registration_registration_id>4</hospitalization_registration_registration_id>
+        </row>
+        <row>
+            <date>2024-02-023</date>
+            <operating_room>OR1</operating_room>
+            <surgerytype_sur_type_id>1</surgerytype_sur_type_id>
+            <equip_equip_id>1</equip_equip_id>
+            <hospitalization_registration_registration_id>4</hospitalization_registration_registration_id>
+        </row>
     </surgery>
     <payment>
         <row>
-            <type>Crédito</type>
+            <type>Cartão</type>
             <ammount>300</ammount>
             <registration_registration_id>1</registration_registration_id>
         </row>
         <row>
-            <type>Crédito</type>
+            <type>Numerário</type>
             <ammount>250</ammount>
             <registration_registration_id>2</registration_registration_id>
         </row>
@@ -248,6 +435,16 @@
             <type>Numerário</type>
             <ammount>50</ammount>
             <registration_registration_id>3</registration_registration_id>
+        </row>
+        <row>
+            <type>Cartão</type>
+            <ammount>700</ammount>
+            <registration_registration_id>4</registration_registration_id>
+        </row>
+        <row>
+            <type>Cartão</type>
+            <ammount>1000</ammount>
+            <registration_registration_id>5</registration_registration_id>
         </row>
     </payment>
 
@@ -261,10 +458,19 @@
         <row>
             <doctor_employee_person_cc>3</doctor_employee_person_cc>
         </row>
+        <row>
+            <doctor_employee_person_cc>9</doctor_employee_person_cc>
+        </row>
     </equip>
     <surgerytype>
         <row>
             <name>Neurocirurgia</name>
+        </row>
+        <row>
+            <name>Cirurgia Cardíaca</name>
+        </row>
+        <row>
+            <name>Cirurgia Oftalmológica</name>
         </row>
     </surgerytype>
     <nurse_equip>
@@ -279,6 +485,10 @@
         <row>
             <nurse_employee_person_cc>2</nurse_employee_person_cc>
             <equip_equip_id>2</equip_equip_id>
+        </row>
+        <row>
+            <nurse_employee_person_cc>5</nurse_employee_person_cc>
+            <equip_equip_id>3</equip_equip_id>
         </row>
     </nurse_equip>
 
