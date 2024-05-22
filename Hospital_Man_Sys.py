@@ -189,15 +189,15 @@ def authenticate_user():
     
     # Getting name and password
     name = payload['name']
-    password = payload['password']
+    password = int(payload['password'])
     
     # Constructing the query statement to execute
-    statement = '''
-                SELECT password, cc
-                FROM %s 
-                JOIN person ON cc=%s
-                AND name=%s;
-                '''
+    statement_temp = '''
+                     SELECT password, cc
+                     FROM {role}
+                     JOIN person ON {role}.{cc_type} = person.cc
+                     WHERE person.name = %s;
+                     '''
 
     # Connecting to Data Base
     db = db_connect()
@@ -217,14 +217,15 @@ def authenticate_user():
                     role = 'doctor'
                 else:
                     role = 'assistant'
-            values = (role, cc_type, name)
+            
+            statement = statement_temp.format(role=role, cc_type=cc_type)
             
             # Executing query
-            cursor.execute(statement, values)
+            cursor.execute(statement, (name,))
             result = cursor.fetchone()
-            
+
             # Verifying result and password
-            if(result and bcrypt.check_password_hash(result[0], password)):
+            if(result and bcrypt.check_password_hash(result[0], str(password))):
                 access_token = create_access_token(identity={'id': result[1], 'role': role})
                 response = {'status': StatusCodes['success'], 'results': access_token}
                 break
