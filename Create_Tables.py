@@ -61,6 +61,7 @@ CREATE TABLE hospitalization (
 
 CREATE TABLE surgery (
 	sur_id					 SERIAL,
+	date					TIMESTAMP NOT NULL,
 	operating_room				 VARCHAR(512) NOT NULL,
 	surgerytype_sur_type_id			 INTEGER NOT NULL,
 	equip_equip_id				 INTEGER NOT NULL,

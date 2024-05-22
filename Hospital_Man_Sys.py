@@ -161,7 +161,7 @@ def insert_type(type):
         response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
 
     finally:
-        if(db is not None):
+        if db is not None:
             db.close()
 
     return jsonify(response)
@@ -236,7 +236,7 @@ def authenticate_user():
         response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
 
     finally:
-        if(db is not None):
+        if db is not None:
             db.close()
 
     return jsonify(response)
@@ -295,7 +295,7 @@ def get_patient_appointments(patient_user_id):
         response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
 
     finally:
-        if(db is not None):
+        if db is not None:
             db.close()
 
     return jsonify(response)
@@ -400,7 +400,7 @@ def get_passient_prescriptions(person_id):
         response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
 
     finally:
-        if(db is not None):
+        if db is not None:
             db.close()
 
     return jsonify(response)
@@ -499,7 +499,7 @@ def add_prescription():
         response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
 
     finally:
-        if(db is not None):
+        if db is not None:
             db.close()
 
     return jsonify(response)
@@ -566,8 +566,6 @@ def get_top3_passients():
 @jwt_required()
 @roles_required('assistant')
 def list_daily_summary(year_month_day):
-    #  {“status”: status_code, “errors”: errors (if any occurs), “results”: {“amount_spent”: 
-    # value, “surgeries”: count, “prescriptions”: count}}
     logger.info('GET /dbproj/daily/<year_month_day>')
     logger.debug(f'GET /dbproj/daily/<year_month_day> - year_month_day: {year_month_day}')
     
@@ -618,20 +616,77 @@ def list_daily_summary(year_month_day):
         response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
 
     finally:
-        if(db is not None):
+        if db is not None:
             db.close()
 
     return jsonify(response)
 
 ##
 ## Generates a monthly report where are listed the doctors with more surgeries
-## in each month for the 12 months.
+## in each month for the last 12 months.
+## NOTE: The current month is not included.
 ##
 @app.route('/dbproj/report', methods=['GET'])
 @jwt_required()
 @roles_required('assistant')
 def generate_monthly_report():
-    return
+    logger.info('GET /dbproj/report')
+    
+    statement = '''
+                WITH MonthlySurgeryCount AS (
+                    SELECT
+                        EXTRACT(YEAR FROM s.date) AS year,
+                        EXTRACT(MONTH FROM s.date) AS month,
+                        e.doctor_employee_person_cc AS doctor_id,
+                        COUNT(*) AS surgery_count,
+                        ROW_NUMBER() OVER (PARTITION BY EXTRACT(YEAR FROM s.date), EXTRACT(MONTH FROM s.date) ORDER BY COUNT(*) DESC) AS rank
+                    FROM surgery s
+                    INNER JOIN equip e ON s.equip_equip_id = e.equip_id
+                    WHERE
+                        s.date >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '12 months' AND
+                        s.date <= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 day'
+                    GROUP BY
+                        EXTRACT(YEAR FROM s.date),
+                        EXTRACT(MONTH FROM s.date),
+                        e.doctor_employee_person_cc
+                )
+                SELECT
+                    to_char(to_date(concat(msc.year::text, '-', msc.month::text, '-01'), 'YYYY-MM-DD'), 'Month YYYY') AS month_year,
+                    p.name AS doctor_name,
+                    msc.surgery_count AS surgery_count
+                FROM MonthlySurgeryCount msc
+                INNER JOIN person p ON msc.doctor_id = p.cc
+                WHERE msc.rank = 1
+                ORDER BY msc.year DESC, msc.month DESC;
+                '''
+    
+    # Connecting to Data Base
+    db = db_connect()
+    cursor = db.cursor()
+
+    try:
+        # Executing the query
+        cursor.execute(statement)
+        result = cursor.fetchall()
+        
+        monthly_rep = []
+        for row in result:
+            monthly_rep.append({
+                'year-month': row[0],
+                'doctor': row[1],
+                'number of surgeries': row[2]
+            })
+        response = {'status': StatusCodes['success'], 'results': monthly_rep}    
+        
+    except(Exception, psycopg2.DatabaseError) as error:
+        logging.error(f'GET /dbproj/report - error: {error}')
+        response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
+
+    finally:
+        if db is not None:
+            db.close()
+
+    return jsonify(response)
 
 
 if __name__ == '__main__':
