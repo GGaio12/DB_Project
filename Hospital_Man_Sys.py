@@ -75,7 +75,10 @@ def landing_page():
 ## Nuser:     'cc', 'name', 'birthdate', 'email', 'password', 'start_date', 'end_date', 'sal', 'work_hours'
 ## Assistant: 'cc', 'name', 'birthdate', 'email', 'password', 'start_date', 'end_date', 'sal', 'work_hours'
 ## Doctor:    'cc', 'name', 'birthdate', 'email', 'password', 'start_date', 'end_date', 'sal', 'work_hours', 'medical_license', 'spec_name'
-## NOTE Dates have to be in YYYY-MM-DD format.
+## NOTE 
+##      Dates have to be in YYYY-MM-DD format.
+##      'name', 'birthdate', 'email', 'password', 'start_date', 'end_date', 'medical_license', 'spec_name' --> strings
+##      'cc', 'sal', 'work_hours' --> integers
 ##
 @app.route('/dbproj/register/<type>', methods=['POST'])
 def insert_type(type):
@@ -94,8 +97,12 @@ def insert_type(type):
 
     # Verifying commun fields
     for field in required_fields:
-        if(field not in payload or (field == 'cc' and type(payload[field]) is not int) or (field != 'cc' and type(payload[field]) is not str)):
+        if(field not in payload):
             return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} not in payload'})
+        if(field == 'cc' and not isinstance(payload[field], int)):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be an integer'})
+        if(field != 'cc' and not isinstance(payload[field], str)):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be a string'})
     
     is_employee = False
     if(type in ['nurse', 'doctor', 'assistant']):
@@ -104,12 +111,18 @@ def insert_type(type):
         for field in employee_fields:
             if(field not in payload):
                 return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} not in payload'})
+            if(field in ['sal', 'work_hours']):
+                if(not isinstance(payload[field], int)):
+                    return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be an integer'})
+            if(field in ['start_date', 'end_date']):
+                if(not isinstance(payload[field], str) or not is_valid_date(payload[field])):
+                    return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be a valid date string in YYYY-MM-DD format'})
 
         if(type == 'doctor'):
             # Verifying only doctor fields
             for field in doctor_fields:
-                if(field not in payload):
-                    return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} not in payload'})
+                if(field not in payload or not isinstance(payload[field], str)):
+                    return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be a string'})
     
     # Initializing commun fields values (hashing password)
     cc = payload['cc']
@@ -170,7 +183,7 @@ def insert_type(type):
 ##
 ## User Authentication. Providing name and password,
 ## user can authenticate and receive an authentication token.
-## NOTE Name and string need to be strings
+## NOTE Name and password need to be strings.
 ##
 @app.route('/dbproj/user', methods=['PUT'])
 def authenticate_user():
@@ -185,9 +198,10 @@ def authenticate_user():
     
     # Verifying if all authentication fields are in payload
     for field in auth_fields:
-        if(field not in payload or type(payload[field]) is not str):
-            response = {'status': StatusCodes['api_error'], 'results': f'{field} not or incorrect type in payload'}
-            return jsonify(response)
+        if(field not in payload):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} not or incorrect type in payload'})
+        if(not isinstance(payload[field], str)):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be a string'})
     
     # Getting name and password
     name = payload['name']
