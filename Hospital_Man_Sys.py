@@ -252,7 +252,72 @@ def authenticate_user():
 @jwt_required()
 @roles_required('patient')
 def schedule_appointment():
-    return
+    logger.info('POST /dbproj/appointment')
+    
+    # Getting json payload
+    payload = request.get_json()
+    logger.debug(f'POST /dbproj/appointment - payload: {payload}')
+    
+    # Required fields for scheduling an appointment
+    required_fields = ['appointment_date', 'equip_id', 'bill', 'bill_payed', 'assistant_id']
+    
+    # Verifying required fields in payload
+    for field in required_fields:
+        if field not in payload:
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} not in payload'})
+
+    appointment_date = payload['appointment_date']
+    equip_id = payload['equip_id']
+    bill = payload['bill']
+    bill_payed = payload['bill_payed']
+    assistant_id = payload['assistant_id']
+    
+    # Ensure bill is a positive number
+    if bill <= 0:
+        return jsonify({'status': StatusCodes['api_error'], 'results': 'Bill amount must be greater than zero'})
+    
+    # Connecting to Data Base
+    db = db_connect()
+    cursor = db.cursor()
+
+    try:
+        # Get patient identity
+        identity = get_jwt_identity()
+
+        # Insert into registration table
+        registration_query = '''
+            INSERT INTO registration (bill, bill_payed, assistant_employee_person_cc, patient_person_cc)
+            VALUES (%s, %s, %s, %s)
+            RETURNING registration_id
+        '''
+        cursor.execute(registration_query, (bill, bill_payed, assistant_id, identity['id']))
+        registration_id = cursor.fetchone()[0]
+        
+        # Insert into appointment table
+        appointment_query = '''
+            INSERT INTO appointment (appoint_date, equip_equip_id, registration_registration_id)
+            VALUES (%s, %s, %s)
+            RETURNING appoint_id
+        '''
+        cursor.execute(appointment_query, (appointment_date, equip_id, registration_id))
+        appointment_id = cursor.fetchone()[0]
+
+        db.commit()
+        
+        response = {'status': StatusCodes['success'], 'results': {'appointment_id': appointment_id}}
+        
+    except (Exception, psycopg2.DatabaseError) as error:
+        logger.error(f'POST /dbproj/appointment - error: {error}')
+        if db:
+            db.rollback()
+        response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
+    
+    finally:
+        if db:
+            db.close()
+    
+    return jsonify(response), 201 if response['status'] == 'success' else 500
+
     
 ##
 ## Get appointments information. Lists all appointments and

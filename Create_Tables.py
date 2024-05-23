@@ -117,7 +117,7 @@ CREATE TABLE sideefect (
 
 CREATE TABLE payment (
 	payment_id		 SERIAL,
-	ammount			DOUBLE PRECISION,
+	amount			DOUBLE PRECISION,
 	type			 VARCHAR(512),
 	registration_registration_id INTEGER,
 	PRIMARY KEY(payment_id,registration_registration_id)

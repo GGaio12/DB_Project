@@ -325,7 +325,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \r\n}",
+					"raw": "{\r\n    \"amount\": 100,\r\n    \"type\": \"credit_card\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
