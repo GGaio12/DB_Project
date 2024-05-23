@@ -350,20 +350,21 @@ def get_patient_appointments(patient_user_id):
     logger.info('GET /dbproj/appointments/<patient_user_id>')
     logger.debug(f'patient_user_id: {patient_user_id}')
     
+    statement = '''
+                SELECT appoint_id AS id, appoint_date AS date, doctor_employee_person_cc AS doctor_id
+                FROM appointment AS ap
+                JOIN equip ON ap.equip_equip_id = equip.equip_id
+                JOIN registration AS reg ON ap.registration_registration_id = reg.registration_id
+                WHERE reg.patient_person_cc = %s;            
+                '''
+    
     # Connecting to Data Base
     db = db_connect()
     cursor = db.cursor()
     
     try:
-        statement = '''
-                    SELECT appoint_id AS id, appoint_date AS date, doctor_employee_person_cc AS doctor_id
-                    FROM appointment AS ap
-                    JOIN equip ON ap.equip_equip_id = equip.equip_id
-                    JOIN registration AS reg ON ap.registration_registration_id = reg.registration_id
-                    WHERE reg.patient_person_cc = %s;            
-                    '''
         cursor.execute(statement, (patient_user_id,))
-        result = cursor.fetchone()
+        result = cursor.fetchall()
         
         if(result):
             # Convert the result to a list of dictionaries
@@ -452,7 +453,7 @@ def get_passient_prescriptions(person_id):
     
     try:
         cursor.execute(statement, params)
-        result = cursor.fetchone()
+        result = cursor.fetchall()
         
         if(result):
             # Convert the result to a list of dictionaries
@@ -473,13 +474,13 @@ def get_passient_prescriptions(person_id):
                     'dosage': row[3],
                     'frequency': row[4]
                 })
-                
+            
             prescriptions.append({
                 'id': presc_id,
                 'validity': row[1],
                 'posology': medicines
             })
-                
+
             response = {'status': StatusCodes['success'], 'results': prescriptions}
         else:
             response = {'status': StatusCodes['api_error'], 'results': 'Patient does not exist or do not have any appointments registered'}
@@ -533,7 +534,7 @@ def add_prescription():
                 return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} in payload not regonized. Should be "appointment" or "hospitalization"'})
         if(field == 'event_id' and not isinstance(payload[field], int)):
             return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be an integer'})
-        if(field == 'validity' and not isinstance(payload[field], str) or not is_valid_date(payload[field])):
+        if(field == 'validity' and (not isinstance(payload[field], str) or not is_valid_date(payload[field]))):
             return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be a valid date string in YYYY-MM-DD format'})
         if(field == 'medicines' and not isinstance(payload[field], list)):
             return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be a list'})
@@ -543,7 +544,7 @@ def add_prescription():
         for field in med_fields:
             if(field not in medicine):
                 return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} not in medicine N:{i} payload'})
-            if(not isinstance(payload[field], str)):
+            if(not isinstance(medicine[field], str)):
                 return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} in medicine N:{i} should be a string'})
 
     # SQL Statements
@@ -551,27 +552,40 @@ def add_prescription():
     statements = {
         'max_prescription_id': 'SELECT MAX(prescription_id) FROM prescription;',
         'max_medicine_id': 'SELECT MAX(medicine_id) FROM medicine;',
-        'max_event_type_id': f'SELECT MAX({type_id}) FROM {payload['type']};'
+        'max_event_type_id': f'SELECT MAX({type_id}) FROM {payload['type']};',
+        'get_reg_id': '''
+                      SELECT registration_id 
+                      FROM registration 
+                      JOIN {type} ON registration_id = registration_registration_id
+                      WHERE {type_id} = %s
+                      '''.format(type=payload['type'], type_id=type_id)
     }
     
-    queries = [('prescription', 'validity', '%s', [payload['validity']])]
+    queries = [('prescription', '(validity)', '%s', [payload['validity']])]
     
     # Connecting to Data Base
     db = db_connect()
     cursor = db.cursor()
     
     try:
+        cursor.execute("BEGIN")
+        cursor.execute("SAVEPOINT no_modified_db")
+        
         # Check if event_id exists
         cursor.execute(statements['max_event_type_id'])
         max_event_type_id = cursor.fetchone()[0]
         if payload['event_id'] > int(max_event_type_id):
             return jsonify({'status': StatusCodes['api_error'], 'results': 'Event id does not exist'})
 
-        # Get new prescription_id
+        # Getting registration id of the event
+        cursor.execute(statements['get_reg_id'], str(payload['event_id']))
+        reg_id = cursor.fetchone()[0]
+        
+        # Getting new prescription_id
         cursor.execute(statements['max_prescription_id'])
         pres_id = cursor.fetchone()[0] + 1
 
-        # Get new medicine_id starting point
+        # Getting new medicine_id starting point
         cursor.execute(statements['max_medicine_id'])
         med_id = cursor.fetchone()[0]
         
@@ -582,7 +596,7 @@ def add_prescription():
                             ('medicine_prescription', '(medicine_medicine_id, prescription_prescription_id)', '%s, %s', [med_id, pres_id])
                           ])
         if(payload['type'] == 'appointment'):
-            queries.append(('appointment_prescription', '(appointment_registration_registration_id, prescription_prescription_id)', '%s, %s', [payload['event_id'], pres_id]))
+            queries.append(('appointment_prescription', '(appointment_registration_registration_id, prescription_prescription_id)', '%s, %s', [reg_id, pres_id]))
         else:
             queries.append(('hospitalization_prescription', '(hospitalization_registration_registration_id, prescription_prescription_id)', '%s, %s', [payload['event_id'], pres_id]))
     
@@ -594,12 +608,17 @@ def add_prescription():
                         ON CONFLICT DO NOTHING;
                         '''
             cursor.execute(statement, values)
-                
+            if(table == 'medicine'):
+                db.commit()
+        
+        db.commit()
         response = {'status': StatusCodes['success'], 'results': pres_id}
 
     except(Exception, psycopg2.DatabaseError) as error:
         logging.error(f'POST /dbproj/prescription/ - error: {error}')
         response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
+        cursor.execute("ROLLBACK TO SAVEPOINT no_modified_db")
+        db.rollback()
 
     finally:
         if db is not None:
@@ -708,7 +727,6 @@ def pay_bill(registration_id):
     
     return jsonify(response)
 
-
     
 ##
 ## Lists top 3 passients considering the money spent in the month.
@@ -736,7 +754,7 @@ def list_daily_summary(year_month_day):
     statement = '''
                 SELECT
                     SUM(bill) AS "Total Registed Bill",
-                    SUM(ammount) AS "Total Ammount Payed",
+                    SUM(amount) AS "Total Ammount Payed",
                     COUNT(sur_id) AS "Total Agended Surgeries",
                     COUNT(prescription_prescription_id) AS "Total Prescriptions Writed"
                 FROM hospitalization AS hos
