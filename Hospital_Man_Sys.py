@@ -351,7 +351,7 @@ def get_patient_appointments(patient_user_id):
     logger.debug(f'patient_user_id: {patient_user_id}')
     
     statement = '''
-                SELECT appoint_id AS id, appoint_date AS date, doctor_employee_person_cc AS doctor_id
+                SELECT appoint_id AS id, cost, appoint_date AS date, doctor_employee_person_cc AS doctor_id
                 FROM appointment AS ap
                 JOIN equip ON ap.equip_equip_id = equip.equip_id
                 JOIN registration AS reg ON ap.registration_registration_id = reg.registration_id
@@ -372,8 +372,9 @@ def get_patient_appointments(patient_user_id):
             for row in result:
                 appointments.append({
                     'id': row[0],
-                    'date': row[1],
-                    'doctor_id': row[2]
+                    'cost': row[1],
+                    'date': row[2],
+                    'doctor_id': row[3]
                 })
             response = {'status': StatusCodes['success'], 'results': appointments}
         else:

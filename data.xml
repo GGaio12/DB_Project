@@ -233,38 +233,29 @@
          *********************************** -->
     <registration>
         <row>
-            <bill>500.0</bill>
-            <bill_payed>FALSE</bill_payed>
             <assistant_employee_person_cc>4</assistant_employee_person_cc>
             <patient_person_cc>1</patient_person_cc>
         </row>
         <row>
-            <bill>300.0</bill>
-            <bill_payed>FALSE</bill_payed>
             <assistant_employee_person_cc>4</assistant_employee_person_cc>
             <patient_person_cc>6</patient_person_cc>
         </row>
         <row>
-            <bill>50.0</bill>
-            <bill_payed>TRUE</bill_payed>
             <assistant_employee_person_cc>4</assistant_employee_person_cc>
             <patient_person_cc>7</patient_person_cc>
         </row>
         <row>
-            <bill>700.0</bill>
-            <bill_payed>TRUE</bill_payed>
             <assistant_employee_person_cc>4</assistant_employee_person_cc>
             <patient_person_cc>10</patient_person_cc>
         </row>
         <row>
-            <bill>1000.0</bill>
-            <bill_payed>TRUE</bill_payed>
             <assistant_employee_person_cc>4</assistant_employee_person_cc>
             <patient_person_cc>11</patient_person_cc>
         </row>
     </registration>
     <appointment>
         <row>
+            <cost>30</cost>
             <appoint_date>2025-08-23 15:15:00</appoint_date>
             <equip_equip_id>2</equip_equip_id>
             <registration_registration_id>3</registration_registration_id>
@@ -272,21 +263,25 @@
     </appointment>
     <hospitalization>
         <row>
+            <cost>50</cost>
             <room_num>101</room_num>
             <nurse_employee_person_cc>2</nurse_employee_person_cc>
             <registration_registration_id>1</registration_registration_id>
         </row>
         <row>
+            <cost>60</cost>
             <room_num>102</room_num>
             <nurse_employee_person_cc>5</nurse_employee_person_cc>
             <registration_registration_id>2</registration_registration_id>
         </row>
         <row>
+            <cost>20</cost>
             <room_num>103</room_num>
             <nurse_employee_person_cc>2</nurse_employee_person_cc>
             <registration_registration_id>4</registration_registration_id>
         </row>
         <row>
+            <cost>70</cost>
             <room_num>104</room_num>
             <nurse_employee_person_cc>5</nurse_employee_person_cc>
             <registration_registration_id>5</registration_registration_id>
@@ -294,6 +289,7 @@
     </hospitalization>
     <surgery>
         <row>
+            <cost>850</cost>
             <date>2024-10-07</date>
             <operating_room>OR1</operating_room>
             <surgerytype_sur_type_id>1</surgerytype_sur_type_id>
@@ -301,6 +297,7 @@
             <hospitalization_registration_registration_id>2</hospitalization_registration_registration_id>
         </row>
         <row>
+            <cost>600</cost>
             <date>2024-05-14</date>
             <operating_room>OR1</operating_room>
             <surgerytype_sur_type_id>2</surgerytype_sur_type_id>
@@ -308,6 +305,7 @@
             <hospitalization_registration_registration_id>5</hospitalization_registration_registration_id>
         </row>
         <row>
+            <cost>250</cost>
             <date>2024-04-27</date>
             <operating_room>OR2</operating_room>
             <surgerytype_sur_type_id>2</surgerytype_sur_type_id>
@@ -315,6 +313,7 @@
             <hospitalization_registration_registration_id>5</hospitalization_registration_registration_id>
         </row>
         <row>
+            <cost>850</cost>
             <date>2024-03-05</date>
             <operating_room>OR2</operating_room>
             <surgerytype_sur_type_id>2</surgerytype_sur_type_id>
@@ -322,6 +321,7 @@
             <hospitalization_registration_registration_id>5</hospitalization_registration_registration_id>
         </row>
         <row>
+            <cost>900</cost>
             <date>2024-02-07</date>
             <operating_room>OR2</operating_room>
             <surgerytype_sur_type_id>3</surgerytype_sur_type_id>
@@ -329,6 +329,7 @@
             <hospitalization_registration_registration_id>5</hospitalization_registration_registration_id>
         </row>
         <row>
+            <cost>100</cost>
             <date>2024-01-30</date>
             <operating_room>OR3</operating_room>
             <surgerytype_sur_type_id>3</surgerytype_sur_type_id>
@@ -336,6 +337,7 @@
             <hospitalization_registration_registration_id>5</hospitalization_registration_registration_id>
         </row>
         <row>
+            <cost>150</cost>
             <date>2023-12-03</date>
             <operating_room>OR3</operating_room>
             <surgerytype_sur_type_id>3</surgerytype_sur_type_id>
@@ -343,6 +345,7 @@
             <hospitalization_registration_registration_id>5</hospitalization_registration_registration_id>
         </row>
         <row>
+            <cost>400</cost>
             <date>2023-11-19</date>
             <operating_room>OR3</operating_room>
             <surgerytype_sur_type_id>3</surgerytype_sur_type_id>
@@ -350,6 +353,7 @@
             <hospitalization_registration_registration_id>5</hospitalization_registration_registration_id>
         </row>
         <row>
+            <cost>350</cost>
             <date>2023-10-07</date>
             <operating_room>OR3</operating_room>
             <surgerytype_sur_type_id>3</surgerytype_sur_type_id>
@@ -357,6 +361,7 @@
             <hospitalization_registration_registration_id>5</hospitalization_registration_registration_id>
         </row>
         <row>
+            <cost>600</cost>
             <date>2023-09-22</date>
             <operating_room>OR3</operating_room>
             <surgerytype_sur_type_id>3</surgerytype_sur_type_id>
@@ -364,6 +369,7 @@
             <hospitalization_registration_registration_id>5</hospitalization_registration_registration_id>
         </row>
         <row>
+            <cost>1000</cost>
             <date>2023-08-19</date>
             <operating_room>OR3</operating_room>
             <surgerytype_sur_type_id>3</surgerytype_sur_type_id>
@@ -371,6 +377,7 @@
             <hospitalization_registration_registration_id>5</hospitalization_registration_registration_id>
         </row>
         <row>
+            <cost>200</cost>
             <date>2023-07-15</date>
             <operating_room>OR1</operating_room>
             <surgerytype_sur_type_id>1</surgerytype_sur_type_id>
@@ -378,6 +385,7 @@
             <hospitalization_registration_registration_id>4</hospitalization_registration_registration_id>
         </row>
         <row>
+            <cost>150</cost>
             <date>2023-06-27</date>
             <operating_room>OR1</operating_room>
             <surgerytype_sur_type_id>1</surgerytype_sur_type_id>
@@ -385,6 +393,7 @@
             <hospitalization_registration_registration_id>4</hospitalization_registration_registration_id>
         </row>
         <row>
+            <cost>300</cost>
             <date>2023-05-30</date>
             <operating_room>OR1</operating_room>
             <surgerytype_sur_type_id>2</surgerytype_sur_type_id>
@@ -392,6 +401,7 @@
             <hospitalization_registration_registration_id>4</hospitalization_registration_registration_id>
         </row>
         <row>
+            <cost>50</cost>
             <date>2023-10-01</date>
             <operating_room>OR2</operating_room>
             <surgerytype_sur_type_id>2</surgerytype_sur_type_id>
@@ -399,6 +409,7 @@
             <hospitalization_registration_registration_id>4</hospitalization_registration_registration_id>
         </row>
         <row>
+            <cost>500</cost>
             <date>2023-11-10</date>
             <operating_room>OR2</operating_room>
             <surgerytype_sur_type_id>2</surgerytype_sur_type_id>
@@ -406,6 +417,7 @@
             <hospitalization_registration_registration_id>4</hospitalization_registration_registration_id>
         </row>
         <row>
+            <cost>200</cost>
             <date>2024-02-02</date>
             <operating_room>OR2</operating_room>
             <surgerytype_sur_type_id>3</surgerytype_sur_type_id>
@@ -413,6 +425,7 @@
             <hospitalization_registration_registration_id>4</hospitalization_registration_registration_id>
         </row>
         <row>
+            <cost>100</cost>
             <date>2024-02-023</date>
             <operating_room>OR1</operating_room>
             <surgerytype_sur_type_id>1</surgerytype_sur_type_id>
