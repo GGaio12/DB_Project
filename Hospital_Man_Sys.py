@@ -94,7 +94,7 @@ def insert_type(type):
 
     # Verifying commun fields
     for field in required_fields:
-        if(field not in payload):
+        if(field not in payload or (field == 'cc' and type(payload[field]) is not int) or (field != 'cc' and type(payload[field]) is not str)):
             return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} not in payload'})
     
     is_employee = False
@@ -186,7 +186,7 @@ def authenticate_user():
     # Verifying if all authentication fields are in payload
     for field in auth_fields:
         if(field not in payload or type(payload[field]) is not str):
-            response = {'status': StatusCodes['api_error'], 'results': f'{field} not in payload'}
+            response = {'status': StatusCodes['api_error'], 'results': f'{field} not or incorrect type in payload'}
             return jsonify(response)
     
     # Getting name and password
@@ -273,33 +273,39 @@ def schedule_appointment():
     assistant_id = payload['assistant_id']
     
     # Ensure bill is a positive number
-    if bill <= 0:
-        return jsonify({'status': StatusCodes['api_error'], 'results': 'Bill amount must be greater than zero'})
+    if bill < 0:
+        return jsonify({'status': StatusCodes['api_error'], 'results': 'Bill amount must be greater or equals to zero'})
+    
+    # Get patient identity
+    identity = get_jwt_identity()
+
+    #equip -- nurse_equip -- registration -- appointment
+
+    # Insert into registration table
+    registration_query = '''
+                         INSERT INTO registration (bill, bill_payed, assistant_employee_person_cc, patient_person_cc)
+                         VALUES (%s, %s, %s, %s)
+                         RETURNING registration_id
+                         '''
+    values = (bill, bill_payed, assistant_id, identity['id'])
+    
+    # Insert into appointment table
+    appointment_query = '''
+                        INSERT INTO appointment (appoint_date, equip_equip_id, registration_registration_id)
+                        VALUES (%s, %s, %s)
+                        RETURNING appoint_id
+                        '''
     
     # Connecting to Data Base
     db = db_connect()
     cursor = db.cursor()
 
     try:
-        # Get patient identity
-        identity = get_jwt_identity()
-
-        # Insert into registration table
-        registration_query = '''
-            INSERT INTO registration (bill, bill_payed, assistant_employee_person_cc, patient_person_cc)
-            VALUES (%s, %s, %s, %s)
-            RETURNING registration_id
-        '''
-        cursor.execute(registration_query, (bill, bill_payed, assistant_id, identity['id']))
+        cursor.execute(registration_query, values)
         registration_id = cursor.fetchone()[0]
         
-        # Insert into appointment table
-        appointment_query = '''
-            INSERT INTO appointment (appoint_date, equip_equip_id, registration_registration_id)
-            VALUES (%s, %s, %s)
-            RETURNING appoint_id
-        '''
-        cursor.execute(appointment_query, (appointment_date, equip_id, registration_id))
+        values = (appointment_date, equip_id, registration_id)
+        cursor.execute(appointment_query, values)
         appointment_id = cursor.fetchone()[0]
 
         db.commit()
@@ -313,10 +319,10 @@ def schedule_appointment():
         response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
     
     finally:
-        if db:
+        if db is not None:
             db.close()
     
-    return jsonify(response), 201 if response['status'] == 'success' else 500
+    return jsonify(response)
 
     
 ##
@@ -576,15 +582,15 @@ def add_prescription():
 ## Execute a payment of an existing bill inserting the data:
 ##  --> TODOO!!!
 ##
-@app.route('/dbproj/bills/<bill_id>', methods=['POST'])
+@app.route('/dbproj/bills/<registration_id>', methods=['POST'])
 @jwt_required()
 @roles_required('patient')
-def pay_bill(bill_id):
-    logger.info(f'POST /dbproj/bills/{bill_id}')
+def pay_bill(registration_id):
+    logger.info(f'POST /dbproj/bills/{registration_id}')
     
     # Getting json payload
     payload = request.get_json()
-    logger.debug(f'POST /dbproj/bills/{bill_id} - payload: {payload}')
+    logger.debug(f'POST /dbproj/bills/{registration_id} - payload: {payload}')
     
     # Required fields for payment
     required_fields = ['amount', 'type']
@@ -609,11 +615,14 @@ def pay_bill(bill_id):
         # SE EXISTE
         # SE PERTENCE AO RESPETIVO ID
         identity = get_jwt_identity()
-        cursor.execute("""
-            SELECT bill, bill_payed
-            FROM registration
-            WHERE registration_id = %s AND patient_person_cc = %s
-        """, (bill_id, identity['id']))
+        statement = '''
+                    SELECT bill, bill_payed
+                    FROM registration
+                    WHERE registration_id = %s
+                    AND patient_person_cc = %s
+                    '''
+        values = (registration_id, identity['id'])
+        cursor.execute(statement, values)
         
         bill_info = cursor.fetchone()
         
@@ -625,23 +634,26 @@ def pay_bill(bill_id):
         if bill_payed:
             return jsonify({'status': StatusCodes['api_error'], 'results': 'Bill is already paid'})
         
-        #PROCESSAR PAGAMENTO
-        cursor.execute("""
-            INSERT INTO payment (amount, type, registration_registration_id)
-            VALUES (%s, %s, %s)
-            RETURNING payment_id
-        """, (amount, payment_type, bill_id))
-        
-        payment_id = cursor.fetchone()[0]
-        
         # VERIFCAR VALOR PAGO
         cursor.execute("""
             SELECT COALESCE(SUM(amount), 0)
             FROM payment
             WHERE registration_registration_id = %s
-        """, (bill_id,))
+        """, (registration_id,))
         
         total_paid = cursor.fetchone()[0]
+        if(total_paid + amount > bill_amount):
+            return
+        
+        
+        #PROCESSAR PAGAMENTO
+        cursor.execute("""
+            INSERT INTO payment (amount, type, registration_registration_id)
+            VALUES (%s, %s, %s)
+            RETURNING payment_id
+        """, (amount, payment_type, registration_id))
+        
+        payment_id = cursor.fetchone()[0]
         
         # mUDAR bill_payed PARA TRUE
         if total_paid >= bill_amount:
@@ -649,23 +661,23 @@ def pay_bill(bill_id):
                 UPDATE registration
                 SET bill_payed = TRUE
                 WHERE registration_id = %s
-            """, (bill_id,))
+            """, (registration_id,))
         
         db.commit()
         
-        response = {'status': StatusCodes['success'], 'results': {'payment_id': payment_id}}
+        response = {'status': StatusCodes['success'], 'results': {'payment_id': payment_id, 'payed_ammount': amount}}
         
     except (Exception, psycopg2.DatabaseError) as error:
-        logger.error(f'POST /dbproj/bills/{bill_id} - error: {error}')
+        logger.error(f'POST /dbproj/bills/{registration_id} - error: {error}')
         if db:
             db.rollback()
         response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
     
     finally:
-        if db:
+        if db is not None:
             db.close()
     
-    return jsonify(response), 200 if response['status'] == 'success' else 500
+    return jsonify(response)
 
 
     

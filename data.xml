@@ -423,27 +423,27 @@
     <payment>
         <row>
             <type>Cartão</type>
-            <ammount>300</ammount>
+            <amount>300</amount>
             <registration_registration_id>1</registration_registration_id>
         </row>
         <row>
             <type>Numerário</type>
-            <ammount>250</ammount>
+            <amount>250</amount>
             <registration_registration_id>2</registration_registration_id>
         </row>
         <row>
             <type>Numerário</type>
-            <ammount>50</ammount>
+            <amount>50</amount>
             <registration_registration_id>3</registration_registration_id>
         </row>
         <row>
             <type>Cartão</type>
-            <ammount>700</ammount>
+            <amount>700</amount>
             <registration_registration_id>4</registration_registration_id>
         </row>
         <row>
             <type>Cartão</type>
-            <ammount>1000</ammount>
+            <amount>1000</amount>
             <registration_registration_id>5</registration_registration_id>
         </row>
     </payment>
