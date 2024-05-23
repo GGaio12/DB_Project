@@ -115,10 +115,11 @@ def insert_type(type):
     cc = payload['cc']
     name = payload['name']
     birthdate = payload['birthdate']
+    email = payload['email']
     password = bcrypt.generate_password_hash(payload['password']).decode('utf-8')
     
     # Constructing all queries 'table_name', 'columns', 'values_placeholders' and 'values' and placing them in a list by order of execution 
-    queries = [('person', '(cc, name, birthdate, email, password)', '%s, %s, %s, %s', (cc, name, birthdate, password))]
+    queries = [('person', '(cc, name, birthdate, email, password)', '%s, %s, %s, %s, %s', (cc, name, birthdate, email, password))]
     if(is_employee):
         # Adding employee-related queries
         queries.append(('employee', '(person_cc)', '%s', (cc,)))
@@ -169,6 +170,7 @@ def insert_type(type):
 ##
 ## User Authentication. Providing name and password,
 ## user can authenticate and receive an authentication token.
+## NOTE Name and string need to be strings
 ##
 @app.route('/dbproj/user', methods=['PUT'])
 def authenticate_user():
@@ -183,13 +185,13 @@ def authenticate_user():
     
     # Verifying if all authentication fields are in payload
     for field in auth_fields:
-        if(field not in payload):
+        if(field not in payload or type(payload[field]) is not str):
             response = {'status': StatusCodes['api_error'], 'results': f'{field} not in payload'}
             return jsonify(response)
     
     # Getting name and password
     name = payload['name']
-    password = int(payload['password'])
+    password = payload['password']
     
     # Constructing the query statement to execute
     statement_temp = '''
@@ -225,7 +227,7 @@ def authenticate_user():
             result = cursor.fetchone()
 
             # Verifying result and password
-            if(result and bcrypt.check_password_hash(result[0], str(password))):
+            if(result and bcrypt.check_password_hash(result[0], password)):
                 access_token = create_access_token(identity={'id': result[1], 'role': role})
                 response = {'status': StatusCodes['success'], 'results': access_token}
                 break
