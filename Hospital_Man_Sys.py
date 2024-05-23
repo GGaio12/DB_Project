@@ -397,18 +397,140 @@ def get_patient_appointments(patient_user_id):
 @app.route('/dbproj/surgery', methods=['POST'])
 @jwt_required()
 @roles_required('assistant')
-def shedule_new_surgery_nh():
-    return
+def schedule_new_surgery_nh():
+    logger.info('POST /dbproj/surgery')
+    
+    # Get JSON payload
+    payload = request.get_json()
+    logger.debug(f'POST /dbproj/surgery - payload: {payload}')
+
+    # Required fields for scheduling a surgery
+    required_fields = ['patient_id', 'operating_room', 'surgery_type_id', 'equip_id', 'surgery_date']
+
+    # Verify required fields in payload
+    for field in required_fields:
+        if field not in payload:
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} not in payload'})
+    
+    # Extract data from payload
+    patient_id = payload['patient_id']
+    surgery_date = payload['surgery_date']
+    operating_room = payload['operating_room']
+    surgery_type_id = payload['surgery_type_id']
+    equip_id = payload['equip_id']
+
+    # Get assistant identity
+    identity = get_jwt_identity()
+
+    # Connect to database
+    db = db_connect()
+    cursor = db.cursor()
+
+    try:
+        # Create new registration and hospitalization
+        cursor.execute("""
+            INSERT INTO registration (bill, bill_payed, assistant_employee_person_cc, patient_person_cc)
+            VALUES (0, FALSE, %s, %s)
+            RETURNING registration_id
+        """, (identity['id'], patient_id))
+        registration_id = cursor.fetchone()[0]
+
+        cursor.execute("""
+            INSERT INTO hospitalization (room_num, nurse_employee_person_cc, registration_registration_id)
+            VALUES (1, %s, %s)
+            RETURNING registration_registration_id
+        """, (identity['id'], registration_id))
+        hospitalization_id = cursor.fetchone()[0]
+
+        # Insert surgery into surgery table
+        cursor.execute("""
+            INSERT INTO surgery (date, operating_room, surgerytype_sur_type_id, equip_equip_id, hospitalization_registration_registration_id)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING sur_id
+        """, (surgery_date, operating_room, surgery_type_id, equip_id, hospitalization_id))
+        surgery_id = cursor.fetchone()[0]
+
+        db.commit()
+        
+        response = {
+            'status': StatusCodes['success'], 'results': {'surgery_id':surgery_id}}
+
+    except (Exception, psycopg2.DatabaseError) as error:
+        logger.error(f'POST /dbproj/surgery - error: {error}')
+        if db:
+            db.rollback()
+        response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
+
+    finally:
+        if db is not None:
+            db.close()
+
+    return jsonify(response)
 
 ##
-## Schedule a new surgery for a passient that is already hospitalized
+## Schedule a new surgery for a patient that is already hospitalized
 ## inserting the data:  --> TODOO!!!
 ##
 @app.route('/dbproj/surgery/<hospitalization_id>', methods=['POST'])
 @jwt_required()
 @roles_required('assistant')
-def shedule_new_surgery_h(hospitalization_id):
-    return
+def schedule_new_surgery_h(hospitalization_id):     ##mudar as partes de abixo
+    logger.info(f'POST /dbproj/surgery/<hospitalization_id>')
+    
+    # Get JSON payload
+    payload = request.get_json()
+    logger.debug(f'POST /dbproj/surgery/<hospitalization_id> - payload: {payload}')
+
+    # Required fields for scheduling a surgery
+    required_fields = ['patient_id', 'operating_room', 'surgery_type_id', 'equip_id', 'surgery_date']
+
+    # Verify required fields in payload
+    for field in required_fields:
+        if field not in payload:
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} not in payload'})
+    
+    # Extract data from payload
+    patient_id = payload['patient_id']
+    surgery_date = payload['surgery_date']
+    operating_room = payload['operating_room']
+    surgery_type_id = payload['surgery_type_id']
+    equip_id = payload['equip_id']
+
+    # Connect to database
+    db = db_connect()
+    cursor = db.cursor()
+
+    try:
+        # Check if hospitalization exists
+        cursor.execute("SELECT * FROM hospitalization WHERE registration_registration_id = %s", (hospitalization_id,))
+        if cursor.fetchone() is None:
+            return jsonify({'status': StatusCodes['api_error'], 'results': 'Invalid hospitalization_id'})
+        
+        # Insert surgery into surgery table
+        cursor.execute("""
+            INSERT INTO surgery (date, operating_room, surgerytype_sur_type_id, equip_equip_id, hospitalization_registration_registration_id)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING sur_id
+        """, (surgery_date, operating_room, surgery_type_id, equip_id, hospitalization_id))
+        surgery_id = cursor.fetchone()[0]
+
+        db.commit()
+        
+        response = {
+            'status': StatusCodes['success'], 'results': {'surgery_id': surgery_id}
+        }
+
+    except (Exception, psycopg2.DatabaseError) as error:
+        logger.error(f'POST /dbproj/surgery/{hospitalization_id} - error: {error}')
+        if db:
+            db.rollback()
+        response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
+
+    finally:
+        if db is not None:
+            db.close()
+
+    return jsonify(response)
 
 ##
 ## Get the list of prescriptions and details of it for a specific passient
