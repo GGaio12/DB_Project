@@ -417,10 +417,11 @@ def get_passient_prescriptions(person_id):
     logger.info('GET /dbproj/prescriptions/<person_id>')
     logger.debug(f'person_id: {person_id}')
     
+    # Verifying if the connected person is a patient and if true veryfing if id match the person_id in URL
     identity = get_jwt_identity()
     logger.debug(f'identity: {identity}')
     if(identity['role'] == 'patient' and identity['id'] != person_id):
-        return jsonify({'status': StatusCodes['api_error'], 'results': 'Your id does not matchs the url id provided'})
+        return jsonify({'status': StatusCodes['api_error'], 'results': 'Your id does not matchs the URL id provided'})
     
     statement = '''
                 SELECT prescription_id AS "id", validity, med_name AS "medicine name", dosage, frequency
@@ -496,7 +497,12 @@ def get_passient_prescriptions(person_id):
 ##
 ## Adds a new prescription inserting the data:
 ## 'type', 'event_id', 'validity', 'medicines'
-## NOTE: 'medicines' is a list of medicines each containing: 'medicine_name', 'dosage', 'frequency'
+## 'medicines' is a list of medicines each containing: 'medicine_name', 'dosage', 'frequency'
+## NOTE 
+##      'validity' have to be in YYYY-MM-DD format.
+##      'type', 'validity', 'medicine_name', 'dosage', 'frequency' --> strings
+##      'event_id' --> integers
+##      'medicines' --> list
 ##
 @app.route('/dbproj/prescription/', methods=['POST'])
 @jwt_required()
@@ -516,20 +522,29 @@ def add_prescription():
     for field in general_fields:
         if(field not in payload):
             return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} not in payload'})
-    
-    # Verifying the inserted type
-    if(payload['type'] == 'appointment'):
-        type_id = 'appoint_id'
-    elif(payload['type'] == 'hospitalization'):
-        type_id = 'hosp_id'
-    else:
-        return jsonify({'status': StatusCodes['api_error'], 'results': f'Type in payload not regonized'})
-    
+        if(field == 'type'):
+            if(not isinstance(payload[field], str)):
+                return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be a string'})
+            if(payload[field] == 'appointment'):
+                type_id = 'appoint_id'
+            elif(payload[field] == 'hospitalization'):
+                type_id = 'hosp_id'
+            else:
+                return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} in payload not regonized. Should be "appointment" or "hospitalization"'})
+        if(field == 'event_id' and not isinstance(payload[field], int)):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be an integer'})
+        if(field == 'validity' and not isinstance(payload[field], str) or not is_valid_date(payload[field])):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be a valid date string in YYYY-MM-DD format'})
+        if(field == 'medicines' and not isinstance(payload[field], list)):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be a list'})
+        
     # Verifying medicines fields
     for i, medicine in enumerate(payload['medicines'], start=1):
         for field in med_fields:
-            if field not in medicine:
+            if(field not in medicine):
                 return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} not in medicine N:{i} payload'})
+            if(not isinstance(payload[field], str)):
+                return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} in medicine N:{i} should be a string'})
 
     # SQL Statements
     # Note: Because type_id and payload['type'] are created in code or already verifyed, it doesn't represent a scurity issue
@@ -549,8 +564,8 @@ def add_prescription():
         # Check if event_id exists
         cursor.execute(statements['max_event_type_id'])
         max_event_type_id = cursor.fetchone()[0]
-        if int(payload['event_id']) > int(max_event_type_id):
-            return jsonify({'status': StatusCodes['api_error'], 'results': 'Event id in payload does not exist'})
+        if payload['event_id'] > int(max_event_type_id):
+            return jsonify({'status': StatusCodes['api_error'], 'results': 'Event id does not exist'})
 
         # Get new prescription_id
         cursor.execute(statements['max_prescription_id'])
