@@ -158,6 +158,9 @@ def insert_type(type):
     
     # Executing all queries
     try:
+        cursor.execute("BEGIN")
+        cursor.execute("SAVEPOINT no_modified_db")
+        
         for table, columns, values_placeholders, values in queries:
             query = f'''
                     INSERT INTO {table} {columns}
@@ -173,6 +176,9 @@ def insert_type(type):
     except(Exception, psycopg2.DatabaseError) as error:
         logging.error(f'POST /dbproj/register/<type> - error: {error}')
         response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
+        if db is not None:
+            db.rollback()
+            cursor.execute("ROLLBACK TO SAVEPOINT no_modified_db")
 
     finally:
         if db is not None:
@@ -315,6 +321,9 @@ def schedule_appointment():
     cursor = db.cursor()
 
     try:
+        cursor.execute("BEGIN")
+        cursor.execute("SAVEPOINT no_modified_db")
+        
         cursor.execute(registration_query, values)
         registration_id = cursor.fetchone()[0]
         
@@ -328,9 +337,10 @@ def schedule_appointment():
         
     except (Exception, psycopg2.DatabaseError) as error:
         logger.error(f'POST /dbproj/appointment - error: {error}')
-        if db:
-            db.rollback()
         response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
+        if db is not None:
+            db.rollback()
+            cursor.execute("ROLLBACK TO SAVEPOINT no_modified_db")
     
     finally:
         if db is not None:
@@ -405,61 +415,77 @@ def schedule_new_surgery_nh():
     logger.debug(f'POST /dbproj/surgery - payload: {payload}')
 
     # Required fields for scheduling a surgery
-    required_fields = ['patient_id', 'operating_room', 'surgery_type_id', 'equip_id', 'surgery_date']
+    required_fields = ['patient_id', 'hosp_cost', 'hosp_room_num', 'hosp_nurse_id', 'sur_cost', 'operating_room', 'surgery_type_id', 'equip_id', 'surgery_date']
 
-    # Verify required fields in payload
+    # Verifying required fields in payload
     for field in required_fields:
-        if field not in payload:
+        if(field not in payload):
             return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} not in payload'})
-    
+        if(field == 'operating_room' and not isinstance(payload[field], str)):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be a string'})
+        if(field in ['patient_id','hosp_room_num', 'hosp_nurse_id', 'surgery_type_id', 'equip_id'] and not isinstance(payload[field], int)):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be an integer'})
+        if(field in ['hosp_cost','sur_cost'] and (not isinstance(payload[field], float) or not isinstance(payload[field], int))):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be an integer or float'})
+        if(field == 'surgery_date' and (not isinstance(payload[field], str) or not is_valid_date(surgery_date))):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be a valid date string in YYYY-MM-DD format'})
+            
     # Extract data from payload
     patient_id = payload['patient_id']
     surgery_date = payload['surgery_date']
     operating_room = payload['operating_room']
+    hosp_cost = payload['hosp_cost']
+    hosp_room_num = payload['hosp_room_num']
+    hosp_nurse_id = payload['hosp_nurse_id']
+    sur_cost = payload['sur_cost']
     surgery_type_id = payload['surgery_type_id']
     equip_id = payload['equip_id']
 
     # Get assistant identity
     identity = get_jwt_identity()
 
+    registration_id = 0
+    hospitalization_id = 0
+    surgery_id = 0
+
+    queries = [
+                ('registration', '(assistant_employee_person_cc, patient_person_cc)', '(%s, %s)', (identity['id'], patient_id), 'registration_id'),
+                ('hospitalization', '(cost, room_num, nurse_employee_person_cc, registration_registration_id)', '(%s, %s, %s, %s)', (hosp_cost, hosp_room_num, hosp_nurse_id, registration_id), 'registration_registration_id'),
+                ('surgery', '(cost, date, operating_room, surgerytype_sur_type_id, equip_equip_id, hospitalization_registration_registration_id)', '(%s, %s, %s, %s, %s, %s)', (sur_cost, surgery_date, operating_room, surgery_type_id, equip_id, hospitalization_id), 'sur_id')
+              ]
+
     # Connect to database
     db = db_connect()
     cursor = db.cursor()
 
     try:
-        # Create new registration and hospitalization
-        cursor.execute("""
-            INSERT INTO registration (bill, bill_payed, assistant_employee_person_cc, patient_person_cc)
-            VALUES (0, FALSE, %s, %s)
-            RETURNING registration_id
-        """, (identity['id'], patient_id))
-        registration_id = cursor.fetchone()[0]
-
-        cursor.execute("""
-            INSERT INTO hospitalization (room_num, nurse_employee_person_cc, registration_registration_id)
-            VALUES (1, %s, %s)
-            RETURNING registration_registration_id
-        """, (identity['id'], registration_id))
-        hospitalization_id = cursor.fetchone()[0]
-
-        # Insert surgery into surgery table
-        cursor.execute("""
-            INSERT INTO surgery (date, operating_room, surgerytype_sur_type_id, equip_equip_id, hospitalization_registration_registration_id)
-            VALUES (%s, %s, %s, %s, %s)
-            RETURNING sur_id
-        """, (surgery_date, operating_room, surgery_type_id, equip_id, hospitalization_id))
-        surgery_id = cursor.fetchone()[0]
+        cursor.execute("BEGIN")
+        cursor.execute("SAVEPOINT no_modified_db")
+        
+        for i, (table, columns, values_placeholders, values, returns) in enumerate(queries):
+            statement = f'''
+                         INSERT INTO {table} {columns}
+                         VALUES {values_placeholders}
+                         RETURNING {returns};
+                         '''
+            cursor.execute(statement, values)
+            if(i == 0):
+                registration_id = cursor.fetchone()[0]
+            elif(i == 1):
+                hospitalization_id = cursor.fetchone()[0]
+            else:
+                surgery_id = cursor.fetchone()[0]
 
         db.commit()
         
-        response = {
-            'status': StatusCodes['success'], 'results': {'surgery_id':surgery_id}}
+        response = {'status': StatusCodes['success'], 'results': {'surgery_id':surgery_id}}
 
     except (Exception, psycopg2.DatabaseError) as error:
         logger.error(f'POST /dbproj/surgery - error: {error}')
-        if db:
-            db.rollback()
         response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
+        if db is not None:
+            db.rollback()
+            cursor.execute("ROLLBACK TO SAVEPOINT no_modified_db")
 
     finally:
         if db is not None:
@@ -740,8 +766,9 @@ def add_prescription():
     except(Exception, psycopg2.DatabaseError) as error:
         logging.error(f'POST /dbproj/prescription/ - error: {error}')
         response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
-        cursor.execute("ROLLBACK TO SAVEPOINT no_modified_db")
-        db.rollback()
+        if db is not None:
+            db.rollback()
+            cursor.execute("ROLLBACK TO SAVEPOINT no_modified_db")
 
     finally:
         if db is not None:
