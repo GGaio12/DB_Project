@@ -1,16 +1,29 @@
-1 --> Creating database: In pgadmin create a database named 'ProjectDB' and save.
+ 1 --> Creating database: In pgadmin create a database named 'ProjectDB' and save.
 
-2 --> Creating user: In pgadmin create a user named 'projectuser' and with a password 'password' and with the permission 'Can login?'.
+ 2 --> Creating user: In pgadmin create a user named 'projectuser' and with a password 'password' and with the permission 'Can login?'.
 
-3 --> Giving permissions to user: Go to the 'ProjectDB' and click with the right button and run 'PSQL tool'. In the terminal run 'grant all on schema public to projectuser;'.
+ 3 --> Giving permissions to user: Go to the 'ProjectDB' and click with the right button and run 'PSQL tool'.
+       In the terminal run 'grant all on schema public to projectuser;'.
 
-4 --> Install psycopg2: Open CMD in ADMIN mode and execute the command 'pip install psycopg2-binary'.
-      Note: If pip not regonized go to %appdata% and go to Local\Programs\Python\PythonX and add it as a path in system variables as well as Local\Programs\Python\PythonX\Scripts
+ 4 --> Install psycopg2: Open CMD in ADMIN mode and execute the command 'pip install psycopg2-binary'.
+       Note: If pip not regonized go to %appdata% and go to Local\Programs\Python\PythonX and add it as a path in
+       system variables as well as Local\Programs\Python\PythonX\Scripts
 
-5 --> Creating tables: Run Create_Tables.py file one time and refresh and confirm in pgadmin that the tables are there in the database.
+ 5 --> Creating tables: Run Create_Tables.py file one time and refresh and confirm in pgadmin that the tables are there
+       in the database.
 
-6 --> Install lxml: Open CMD in ADMIN mode and execute the command 'pip install lxml'. If error look to step 4.
+ 6 --> Install lxml: Open CMD in ADMIN mode and execute the command 'pip install lxml'. If error look to step 4.
 
-7 --> Insert initial test data: Run Insert_Test_Data.py one time.
+ 7 --> Insert initial test data: Run Insert_Test_Data.py one time.
 
-8 --> Install flask, Flask-JWT-Extended and Flask-Bcrypt: Open CMD in ADMIN mode and execute the command 'pip install flask', 'pip install Flask-JWT-Extended' and 'pip install Flask-Bcrypt'. If error look to step 4.
+ 8 --> Install flask, Flask-JWT-Extended and Flask-Bcrypt: Open CMD in ADMIN mode and execute the command
+       'pip install flask', 'pip install Flask-JWT-Extended' and 'pip install Flask-Bcrypt'. If error look to step 4.
+
+ 9 --> Start server: Run Hospital_Man_Sys.py file.
+
+10 --> Setting up Postman: Open Postman and import the collection from the file Project_DB.postman_collection.json
+       and import the environment from the file JWT Token.postman_environment.json and in top-right corner where says
+       'No environment' select the 'JWT Token' from the drop down menu.
+
+11 --> Run and test endpoints: To test endpoints just click on a request of the collection and send the request.
+       If the request need some kinda of data, you need to modify 'body' to the value you want.
