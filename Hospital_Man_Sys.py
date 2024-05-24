@@ -455,6 +455,7 @@ def schedule_new_surgery_nh():
     surgery_date = payload['surgery_date']
     operating_room = payload['operating_room']
     hosp_cost = payload['hosp_cost']
+    hosp_date = payload['hosp_date']
     hosp_room_num = payload['hosp_room_num']
     hosp_nurse_id = payload['hosp_nurse_id']
     sur_cost = payload['sur_cost']
@@ -469,7 +470,7 @@ def schedule_new_surgery_nh():
     queries = [
                 ['equip', '(doctor_employee_person_cc)', '(%s)', (doctor_id,), 'equip_id'],
                 ['registration', '(assistant_employee_person_cc, patient_person_cc)', '(%s, %s)', [identity['id'], patient_id], 'registration_id'],
-                ['hospitalization', '(cost, room_num, nurse_employee_person_cc, registration_registration_id)', '(%s, %s, %s, %s)', [hosp_cost, hosp_room_num, hosp_nurse_id, registration_id], 'registration_registration_id'],
+                ['hospitalization', '(cost, hosp_date, room_num, nurse_employee_person_cc, registration_registration_id)', '(%s, %s, %s, %s, %s)', [hosp_cost, hosp_date, hosp_room_num, hosp_nurse_id, registration_id], 'registration_registration_id'],
                 ['surgery', '(cost, date, operating_room, surgerytype_sur_type_id, equip_equip_id, hospitalization_registration_registration_id)', '(%s, %s, %s, %s, %s, %s)', [sur_cost, surgery_date, operating_room, surgery_type_id, equip_id, hospitalization_id], 'sur_id']
               ]
 
@@ -502,7 +503,7 @@ def schedule_new_surgery_nh():
                 for j, nurse_id in enumerate(nurses):
                     queries[4+j][3] = [nurse_id, equip_id]
             elif(i == 1):
-                queries[2][3][3] = cursor.fetchone()[0]
+                queries[2][3][4] = cursor.fetchone()[0]
             elif(i == 2):
                 queries[3][3][5] = cursor.fetchone()[0]
             elif(i == 3):
@@ -575,7 +576,6 @@ def schedule_new_surgery_h(hospitalization_id):
     surgery_type_id = payload['surgery_type_id']
     doctor_id = payload['doctor_id']
     nurses = payload['nurses']
-    
     
     check_hosp_reg = '''
                      SELECT *
