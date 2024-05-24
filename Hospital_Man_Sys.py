@@ -959,7 +959,62 @@ def pay_bill(registration_id):
 @jwt_required()
 @roles_required('assistant')
 def get_top3_patients():
-    return
+    logger.info('GET /dbproj/top3')
+
+    # Get JSON payload (for logging purposes, even though GET requests typically do not have payloads)
+    payload = request.get_json()
+    logger.debug(f'GET /dbproj/top3 - payload: {payload}')
+
+    # Connect to database
+    db = db_connect()
+    cursor = db.cursor()
+
+    try:
+        # Current month and year
+        from datetime import datetime
+        now = datetime.now()
+        current_month = now.month
+        current_year = now.year
+
+        # SQL query to get top 3 patients by money spent in the current month
+        top3_query = """
+            SELECT p.person_cc, p.name, SUM(r.bill) as total_spent
+            FROM registration r
+            JOIN patient p ON r.patient_person_cc = p.person_cc
+            WHERE EXTRACT(MONTH FROM r.regist_date) = %s
+            AND EXTRACT(YEAR FROM r.regist_date) = %s
+            GROUP BY p.person_cc, p.name
+            ORDER BY total_spent DESC
+            LIMIT 3
+        """
+        top3_values = (current_month, current_year)
+        cursor.execute(top3_query, top3_values)
+        top3_patients = cursor.fetchall()
+
+        results = []
+        for patient in top3_patients:
+            results.append({
+                'patient_id': patient[0],
+                'name': patient[1],
+                'total_spent': patient[2]
+            })
+
+        response = {
+            'status': StatusCodes['success'],
+            'results': results
+        }
+
+    except (Exception, psycopg2.DatabaseError) as error:
+        logger.error(f'GET /dbproj/top3 - error: {error}')
+        if db:
+            db.rollback()
+        response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
+
+    finally:
+        if db is not None:
+            db.close()
+
+    return jsonify(response)
 
 ##
 ## Daily summary. Lists a count for all hospitalizations details of a day.
