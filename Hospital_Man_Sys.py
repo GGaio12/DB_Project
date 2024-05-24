@@ -286,7 +286,7 @@ def schedule_appointment():
     logger.debug(f'POST /dbproj/appointment - payload: {payload}')
     
     # Required fields for scheduling an appointment
-    required_fields = ['appointment_date', 'equip_id', 'bill', 'bill_payed', 'assistant_id']
+    required_fields = ['appointment_date', 'bill', 'bill_payed', 'assistant_id', 'doctor_id', 'nurse_id']
     
     # Verifying required fields in payload
     for field in required_fields:
@@ -294,32 +294,42 @@ def schedule_appointment():
             return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} not in payload'})
 
     appointment_date = payload['appointment_date']
-    equip_id = payload['equip_id']
     bill = payload['bill']
     bill_payed = payload['bill_payed']
     assistant_id = payload['assistant_id']
+    doctor_id = payload['doctor_id']
+    nurse_id = payload['nurse_id']
     
     # Ensure bill is a positive number
-    if(bill < 0):
+    if bill < 0:
         return jsonify({'status': StatusCodes['api_error'], 'results': 'Bill amount must be greater or equals to zero'})
     
     # Get patient identity
     identity = get_jwt_identity()
 
-    #equip -- nurse_equip -- registration -- appointment
-
+    # Queries to insert into equip and nurse_equip tables
+    equip_query = '''
+                  INSERT INTO equip (doctor_employee_person_cc)
+                  VALUES (%s)
+                  RETURNING equip_id
+                  '''
+    nurse_equip_query = '''
+                        INSERT INTO nurse_equip (nurse_employee_person_cc, equip_equip_id)
+                        VALUES (%s, %s)
+                        '''
+    
     # Insert into registration table
     registration_query = '''
                          INSERT INTO registration (bill, bill_payed, assistant_employee_person_cc, patient_person_cc)
                          VALUES (%s, %s, %s, %s)
                          RETURNING registration_id
                          '''
-    values = (bill, bill_payed, assistant_id, identity['id'])
+    registration_values = (bill, bill_payed, assistant_id, identity['id'])
     
     # Insert into appointment table
     appointment_query = '''
-                        INSERT INTO appointment (appoint_date, equip_equip_id, registration_registration_id)
-                        VALUES (%s, %s, %s)
+                        INSERT INTO appointment (appoint_date, registration_registration_id)
+                        VALUES (%s, %s)
                         RETURNING appoint_id
                         '''
     
@@ -330,11 +340,20 @@ def schedule_appointment():
     try:
         cursor.execute("BEGIN")
         
-        cursor.execute(registration_query, values)
+        # Insert into equip table and get equip_id
+        cursor.execute(equip_query, (doctor_id,))
+        equip_id = cursor.fetchone()[0]
+        
+        # Insert into nurse_equip table
+        cursor.execute(nurse_equip_query, (nurse_id, equip_id))
+        
+        # Insert into registration table and get registration_id
+        cursor.execute(registration_query, registration_values)
         registration_id = cursor.fetchone()[0]
         
-        values = (appointment_date, equip_id, registration_id)
-        cursor.execute(appointment_query, values)
+        # Insert into appointment table
+        appointment_values = (appointment_date, registration_id)
+        cursor.execute(appointment_query, appointment_values)
         appointment_id = cursor.fetchone()[0]
 
         db.commit()
@@ -352,6 +371,7 @@ def schedule_appointment():
             db.close()
     
     return jsonify(response)
+
     
 ##
 ## Get appointments information. Lists all appointments and
@@ -964,7 +984,6 @@ def pay_bill(registration_id):
     
     return jsonify(response)
 
-    
 ##
 ## Lists top 3 patients considering the money spent in the month.
 ##
