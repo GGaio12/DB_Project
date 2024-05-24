@@ -54,6 +54,7 @@ CREATE TABLE employee (
 CREATE TABLE hospitalization (
 	hosp_id			 SERIAL,
 	cost			DOUBLE PRECISION,
+	date		TIMESTAMP NOT NULL,
 	room_num			 INTEGER NOT NULL,
 	nurse_employee_person_cc	 INTEGER NOT NULL,
 	registration_registration_id INTEGER,

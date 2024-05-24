@@ -264,24 +264,28 @@
     <hospitalization>
         <row>
             <cost>50</cost>
+            <date>2024-05-24 10:30:00</date>
             <room_num>101</room_num>
             <nurse_employee_person_cc>2</nurse_employee_person_cc>
             <registration_registration_id>1</registration_registration_id>
         </row>
         <row>
             <cost>60</cost>
+            <date>2024-05-25 12:30:00</date>
             <room_num>102</room_num>
             <nurse_employee_person_cc>5</nurse_employee_person_cc>
             <registration_registration_id>2</registration_registration_id>
         </row>
         <row>
             <cost>20</cost>
+            <date>2024-05-29 17:15:00</date>
             <room_num>103</room_num>
             <nurse_employee_person_cc>2</nurse_employee_person_cc>
             <registration_registration_id>4</registration_registration_id>
         </row>
         <row>
             <cost>70</cost>
+            <date>2024-05-28 20:00:00</date>
             <room_num>104</room_num>
             <nurse_employee_person_cc>5</nurse_employee_person_cc>
             <registration_registration_id>5</registration_registration_id>

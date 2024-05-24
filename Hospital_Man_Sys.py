@@ -45,6 +45,16 @@ def is_valid_date(date_string):
         # If parsing fails, it's not a valid date
         return False
 
+# Help function to confirm data is in timestamp date like format.
+def is_valid_timestamp_date(timestamp_date_string):
+    try:
+        # Try to parse the string with the given format
+        datetime.strptime(timestamp_date_string, '%Y-%m-%d %H:%M:%S')
+        return True
+    except ValueError:
+        # If parsing fails, it's not a valid date
+        return False
+
 
 ##########################################################
 #                        ENDPOINTS                       #
@@ -396,10 +406,11 @@ def get_patient_appointments(patient_user_id):
     
 ##
 ## Schedule a new surgery for a patient that isn't hospitalized yet inserting the data:
-## 'patient_id', 'hosp_cost', 'hosp_room_num', 'hosp_nurse_id', 'sur_cost', 'operating_room', 'surgery_type_id', 'doctor_id', 'surgery_date', 'nurses'
+## 'patient_id', 'hosp_cost', 'hosp_date', 'hosp_room_num', 'hosp_nurse_id', 'sur_cost', 'operating_room', 'surgery_type_id', 'doctor_id', 'surgery_date', 'nurses'
 ## NOTE 
 ##      'surgery_date' have to be in YYYY-MM-DD format.
-##      'operating_room', 'surgery_date' --> strings
+##      'hosp_date' have to be in 'YYYY-MM-DD HH:MM:SS' format.
+##      'hosp_date', 'operating_room', 'surgery_date' --> strings
 ##      'patient_id', 'hosp_room_num', 'hosp_nurse_id', 'surgery_type_id', 'doctor_id' --> integers
 ##      'hosp_cost', 'sur_cost' --> integers or floats
 ##      'nurses' --> list of integers
@@ -415,7 +426,7 @@ def schedule_new_surgery_nh():
     logger.debug(f'POST /dbproj/surgery - payload: {payload}')
 
     # Required fields for scheduling a surgery
-    required_fields = ['patient_id', 'hosp_cost', 'hosp_room_num', 'hosp_nurse_id', 'sur_cost', 'operating_room', 'surgery_type_id', 'doctor_id', 'surgery_date', 'nurses']
+    required_fields = ['patient_id', 'hosp_cost', 'hosp_date', 'hosp_room_num', 'hosp_nurse_id', 'sur_cost', 'operating_room', 'surgery_type_id', 'doctor_id', 'surgery_date', 'nurses']
 
     # Verifying required fields in payload
     for field in required_fields:
@@ -425,6 +436,8 @@ def schedule_new_surgery_nh():
             return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be a string'})
         if(field in ['patient_id', 'hosp_room_num', 'hosp_nurse_id', 'surgery_type_id', 'doctor_id'] and not isinstance(payload[field], int)):
             return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be an integer'})
+        if(field == 'hosp_date' and (not isinstance(payload[field], str) or not is_valid_timestamp_date(payload[field]))):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be a valid timestamp date string in "YYYY-MM-DD HH:MM:SS" format'})
         if(field in ['hosp_cost', 'sur_cost'] and (not isinstance(payload[field], float) and not isinstance(payload[field], int))):
             return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be an integer or float'})
         if(field == 'surgery_date' and (not isinstance(payload[field], str) or not is_valid_date(payload[field]))):
