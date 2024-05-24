@@ -470,7 +470,7 @@ def schedule_new_surgery_nh():
     queries = [
                 ['equip', '(doctor_employee_person_cc)', '(%s)', (doctor_id,), 'equip_id'],
                 ['registration', '(assistant_employee_person_cc, patient_person_cc)', '(%s, %s)', [identity['id'], patient_id], 'registration_id'],
-                ['hospitalization', '(cost, hosp_date, room_num, nurse_employee_person_cc, registration_registration_id)', '(%s, %s, %s, %s, %s)', [hosp_cost, hosp_date, hosp_room_num, hosp_nurse_id, registration_id], 'registration_registration_id'],
+                ['hospitalization', '(cost, date, room_num, nurse_employee_person_cc, registration_registration_id)', '(%s, %s, %s, %s, %s)', [hosp_cost, hosp_date, hosp_room_num, hosp_nurse_id, registration_id], 'registration_registration_id'],
                 ['surgery', '(cost, date, operating_room, surgerytype_sur_type_id, equip_equip_id, hospitalization_registration_registration_id)', '(%s, %s, %s, %s, %s, %s)', [sur_cost, surgery_date, operating_room, surgery_type_id, equip_id, hospitalization_id], 'sur_id']
               ]
 
@@ -977,43 +977,117 @@ def get_top3_patients():
     # Current month and year
     now = datetime.now()
     
-    # SQL query to get top 3 patients by money spent in the current month
+    # Query to get the top 3 patients by money spent in the current month and all their procedures informations
     top3_query = '''
-                 SELECT cc, name, SUM(bill) as total_spent
-                 FROM registration r
-                 JOIN patient ON r.patient_person_cc = person_cc
-                 JOIN person ON person_cc = cc
-                 WHERE EXTRACT(MONTH FROM r.regist_date) = %s
-                 AND EXTRACT(YEAR FROM r.regist_date) = %s
-                 GROUP BY cc, name
-                 ORDER BY total_spent DESC
-                 LIMIT 3
+                 WITH total_spent AS (
+                     SELECT 
+                         r.patient_person_cc,
+                         p.name,
+                         SUM(COALESCE(a.cost, 0) + COALESCE(h.cost, 0)) AS amount_spent
+                     FROM registration r
+                     JOIN person p ON r.patient_person_cc = p.cc
+                     LEFT JOIN appointment a ON r.registration_id = a.registration_registration_id AND a.appoint_date >= date_trunc('month', current_date)
+                     LEFT JOIN hospitalization h ON r.registration_id = h.registration_registration_id AND h.date >= date_trunc('month', current_date)
+                     WHERE r.regist_date >= date_trunc('month', current_date)
+                     GROUP BY r.patient_person_cc, p.name
+                 ),
+                 ranked_patients AS (
+                     SELECT 
+                         patient_person_cc,
+                         name,
+                         amount_spent,
+                         ROW_NUMBER() OVER (ORDER BY amount_spent DESC) AS rank
+                     FROM total_spent
+                 )
+                 SELECT 
+                     rp.patient_person_cc AS patient_id,
+                     rp.name,
+                     rp.amount_spent,
+                     a.appoint_date AS procedure_date,
+                     'Appointment' AS procedure_type,
+                     a.cost AS procedure_cost,
+                     a.equip_equip_id AS procedure_equip_id
+                 FROM ranked_patients rp
+                 JOIN registration r ON rp.patient_person_cc = r.patient_person_cc
+                 JOIN appointment a ON r.registration_id = a.registration_registration_id
+                 WHERE rp.rank <= 3
+                 AND a.appoint_date >= date_trunc('month', current_date)
+                    
+                 UNION ALL
+                
+                 SELECT 
+                     rp.patient_person_cc AS patient_id,
+                     rp.name,
+                     rp.amount_spent,
+                     h.date AS procedure_date,
+                     'Hospitalization' AS procedure_type,
+                     h.cost AS procedure_cost,
+                     h.nurse_employee_person_cc AS procedure_nurse_id
+                 FROM ranked_patients rp
+                 JOIN registration r ON rp.patient_person_cc = r.patient_person_cc
+                 JOIN hospitalization h ON r.registration_id = h.registration_registration_id
+                 WHERE rp.rank <= 3
+                 AND h.date >= date_trunc('month', current_date)
+                 ORDER BY amount_spent DESC, name, procedure_date;
                  '''
-    top3_values = (now.month, now.year)
 
-    # Connect to database
+    results = []
+    current_patient = {}
+    current_procedures = []
+    current_id = None
+
+    # Connecting to Data Base
     db = db_connect()
     cursor = db.cursor()
-
+    
     try:
-        cursor.execute(top3_query, top3_values)
-        top3_patients = cursor.fetchall()
+        cursor.execute(top3_query)
+        top3_patients_infos = cursor.fetchall()
+        
+        for patient in top3_patients_infos:
+            patient_id = patient[0]
+            name = patient[1]
+            total_spent = patient[2]
+            procedure_date = patient[3]
+            procedure_type = patient[4]
+            procedure_cost = patient[5]
+            procedure_equip_id = patient[6]
 
-        results = []
-        for patient in top3_patients:
-            results.append({
-                'patient_id': patient[0],
-                'name': patient[1],
-                'total_spent': patient[2]
+            # Check if is still processing the same patient
+            if((current_id is None) or (patient_id != current_id)):
+                # If it's a new patient and there's a current patient being processed, append it to results
+                if(current_id is not None):
+                    current_patient['procedures'] = current_procedures
+                    results.append(current_patient)
+
+                # Reset for the new patient
+                current_patient = {
+                    'patient_id': patient_id,
+                    'name': name,
+                    'total_spent': total_spent,
+                    'procedures': []
+                }
+                current_procedures = []
+                current_id = patient_id
+
+            # Add the procedure to the current patient's procedures
+            current_procedures.append({
+                'type': procedure_type,
+                'date': procedure_date,
+                'cost': procedure_cost,
+                'encar_equip': procedure_equip_id
             })
 
+        # Add the last patient being processed
+        if(current_id is not None):
+            current_patient['procedures'] = current_procedures
+            results.append(current_patient)
+            
         response = {'status': StatusCodes['success'], 'results': results}
 
     except (Exception, psycopg2.DatabaseError) as error:
         logger.error(f'GET /dbproj/top3 - error: {error}')
         response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
-        if(db is not None):
-            db.rollback()
 
     finally:
         if(db is not None):
