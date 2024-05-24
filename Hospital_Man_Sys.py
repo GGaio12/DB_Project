@@ -961,33 +961,28 @@ def pay_bill(registration_id):
 def get_top3_patients():
     logger.info('GET /dbproj/top3')
 
-    # Get JSON payload (for logging purposes, even though GET requests typically do not have payloads)
-    payload = request.get_json()
-    logger.debug(f'GET /dbproj/top3 - payload: {payload}')
+    # Current month and year
+    now = datetime.now()
+    
+    # SQL query to get top 3 patients by money spent in the current month
+    top3_query = '''
+                 SELECT cc, name, SUM(bill) as total_spent
+                 FROM registration r
+                 JOIN patient ON r.patient_person_cc = person_cc
+                 JOIN person ON person_cc = cc
+                 WHERE EXTRACT(MONTH FROM r.regist_date) = %s
+                 AND EXTRACT(YEAR FROM r.regist_date) = %s
+                 GROUP BY cc, name
+                 ORDER BY total_spent DESC
+                 LIMIT 3
+                 '''
+    top3_values = (now.month, now.year)
 
     # Connect to database
     db = db_connect()
     cursor = db.cursor()
 
     try:
-        # Current month and year
-        from datetime import datetime
-        now = datetime.now()
-        current_month = now.month
-        current_year = now.year
-
-        # SQL query to get top 3 patients by money spent in the current month
-        top3_query = """
-            SELECT p.person_cc, p.name, SUM(r.bill) as total_spent
-            FROM registration r
-            JOIN patient p ON r.patient_person_cc = p.person_cc
-            WHERE EXTRACT(MONTH FROM r.regist_date) = %s
-            AND EXTRACT(YEAR FROM r.regist_date) = %s
-            GROUP BY p.person_cc, p.name
-            ORDER BY total_spent DESC
-            LIMIT 3
-        """
-        top3_values = (current_month, current_year)
         cursor.execute(top3_query, top3_values)
         top3_patients = cursor.fetchall()
 
@@ -999,19 +994,16 @@ def get_top3_patients():
                 'total_spent': patient[2]
             })
 
-        response = {
-            'status': StatusCodes['success'],
-            'results': results
-        }
+        response = {'status': StatusCodes['success'], 'results': results}
 
     except (Exception, psycopg2.DatabaseError) as error:
         logger.error(f'GET /dbproj/top3 - error: {error}')
-        if db:
-            db.rollback()
         response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
+        if(db is not None):
+            db.rollback()
 
     finally:
-        if db is not None:
+        if(db is not None):
             db.close()
 
     return jsonify(response)
