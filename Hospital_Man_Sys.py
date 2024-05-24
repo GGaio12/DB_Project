@@ -170,7 +170,7 @@ def insert_type(type):
 
         db.commit()
         
-        response = {'status': StatusCodes['success'], 'results': cc}
+        response = {'status': StatusCodes['success'], 'results': {'personal_id': cc}}
 
     except(Exception, psycopg2.DatabaseError) as error:
         logging.error(f'POST /dbproj/register/<type> - error: {error}')
@@ -247,7 +247,7 @@ def authenticate_user():
             # Verifying result and password
             if(result and bcrypt.check_password_hash(result[0], password)):
                 access_token = create_access_token(identity={'id': result[1], 'role': role})
-                response = {'status': StatusCodes['success'], 'results': access_token}
+                response = {'status': StatusCodes['success'], 'results': {'access_token': access_token}}
                 break
             elif(i == 3):
                 response = {'status': StatusCodes['api_error'], 'results': 'Incorrect name/passord'}
@@ -261,7 +261,6 @@ def authenticate_user():
             db.close()
 
     return jsonify(response)
-
 
 ## the data:  --> TODOO!!!
 ##
@@ -343,7 +342,6 @@ def schedule_appointment():
             db.close()
     
     return jsonify(response)
-
     
 ##
 ## Get appointments information. Lists all appointments and
@@ -382,7 +380,7 @@ def get_patient_appointments(patient_user_id):
                     'date': row[2],
                     'doctor_id': row[3]
                 })
-            response = {'status': StatusCodes['success'], 'results': appointments}
+            response = {'status': StatusCodes['success'], 'results': {'appointments': appointments}}
         else:
             response = {'status': StatusCodes['api_error'], 'results': 'Patient does not exist or do not have any appointments registered'}
 
@@ -397,7 +395,7 @@ def get_patient_appointments(patient_user_id):
     return jsonify(response)
     
 ##
-## Schedule a new surgery for a passient that isn't hospitalized yet inserting the data:
+## Schedule a new surgery for a patient that isn't hospitalized yet inserting the data:
 ## 'patient_id', 'hosp_cost', 'hosp_room_num', 'hosp_nurse_id', 'sur_cost', 'operating_room', 'surgery_type_id', 'doctor_id', 'surgery_date', 'nurses'
 ## NOTE 
 ##      'surgery_date' have to be in YYYY-MM-DD format.
@@ -631,11 +629,11 @@ def schedule_new_surgery_h(hospitalization_id):
     return jsonify(response)
 
 ##
-## Get the list of prescriptions and details of it for a specific passient
+## Get the list of prescriptions and details of it for a specific patient
 ##
 @app.route('/dbproj/prescriptions/<person_id>', methods=['GET'])
 @jwt_required()
-def get_passient_prescriptions(person_id):
+def get_patient_prescriptions(person_id):
     logger.info('GET /dbproj/prescriptions/<person_id>')
     logger.debug(f'person_id: {person_id}')
     
@@ -702,7 +700,7 @@ def get_passient_prescriptions(person_id):
                 'posology': medicines
             })
 
-            response = {'status': StatusCodes['success'], 'results': prescriptions}
+            response = {'status': StatusCodes['success'], 'results': {'prescriptions': prescriptions}}
         else:
             response = {'status': StatusCodes['api_error'], 'results': 'Patient does not exist or do not have any appointments registered'}
 
@@ -836,7 +834,7 @@ def add_prescription():
                 cursor.execute("BEGIN")
         
         db.commit()
-        response = {'status': StatusCodes['success'], 'results': pres_id}
+        response = {'status': StatusCodes['success'], 'results': {'prescription_id': pres_id}}
 
     except(Exception, psycopg2.DatabaseError) as error:
         logging.error(f'POST /dbproj/prescription/ - error: {error}')
@@ -955,12 +953,12 @@ def pay_bill(registration_id):
 
     
 ##
-## Lists top 3 passients considering the money spent in the month.
+## Lists top 3 patients considering the money spent in the month.
 ##
 @app.route('/dbproj/top3', methods=['GET'])
 @jwt_required()
 @roles_required('assistant')
-def get_top3_passients():
+def get_top3_patients():
     return
 
 ##
@@ -1080,7 +1078,7 @@ def generate_monthly_report():
                 'doctor': row[1],
                 'number of surgeries': row[2]
             })
-        response = {'status': StatusCodes['success'], 'results': monthly_rep}    
+        response = {'status': StatusCodes['success'], 'results': {'monthly_report': monthly_rep}}    
         
     except(Exception, psycopg2.DatabaseError) as error:
         logging.error(f'GET /dbproj/report - error: {error}')
