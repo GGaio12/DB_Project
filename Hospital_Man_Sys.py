@@ -499,7 +499,7 @@ def schedule_new_surgery_nh():
 
         db.commit()
         
-        response = {'status': StatusCodes['success'], 'results': {'surgery_id':surgery_id}}
+        response = {'status': StatusCodes['success'], 'results': {'surgery_id': surgery_id}}
 
     except (Exception, psycopg2.DatabaseError) as error:
         logger.error(f'POST /dbproj/surgery - error: {error}')
@@ -513,52 +513,106 @@ def schedule_new_surgery_nh():
 
     return jsonify(response)
 
-##
-## Schedule a new surgery for a patient that is already hospitalized
-## inserting the data:  --> TODOO!!!
+## 
+## Schedule a new surgery for a patient that is already hospitalized inserting the data:
+## 'sur_cost', 'operating_room', 'surgery_type_id', 'doctor_id', 'surgery_date', 'nurses'
+## NOTE 
+##      'surgery_date' have to be in YYYY-MM-DD format.
+##      'operating_room', 'surgery_date' --> strings
+##      'surgery_type_id', 'doctor_id' --> integers
+##      'sur_cost' --> integers or floats
+##      'nurses' --> list of integers
 ##
 @app.route('/dbproj/surgery/<hospitalization_id>', methods=['POST'])
 @jwt_required()
 @roles_required('assistant')
-def schedule_new_surgery_h(hospitalization_id):     ##mudar as partes de abixo
+def schedule_new_surgery_h(hospitalization_id):
     logger.info(f'POST /dbproj/surgery/<hospitalization_id>')
+    logger.debug(f'POST /dbproj/surgery/<hospitalization_id> - hospitalization_id: {hospitalization_id}')
     
     # Get JSON payload
     payload = request.get_json()
     logger.debug(f'POST /dbproj/surgery/<hospitalization_id> - payload: {payload}')
 
     # Required fields for scheduling a surgery
-    required_fields = ['patient_id', 'operating_room', 'surgery_type_id', 'equip_id', 'surgery_date']
+    required_fields = ['sur_cost', 'operating_room', 'surgery_type_id', 'doctor_id', 'surgery_date', 'nurses']
 
     # Verify required fields in payload
     for field in required_fields:
-        if field not in payload:
+        if(field not in payload):
             return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} not in payload'})
+        if(field == 'operating_room' and not isinstance(payload[field], str)):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be a string'})
+        if(field in ['surgery_type_id', 'doctor_id'] and not isinstance(payload[field], int)):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be an integer'})
+        if(field == 'sur_cost' and (not isinstance(payload[field], float) and not isinstance(payload[field], int))):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be an integer or float'})
+        if(field == 'surgery_date' and (not isinstance(payload[field], str) or not is_valid_date(payload[field]))):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be a valid date string in YYYY-MM-DD format'})
+        if(field == 'nurses' and not isinstance(payload[field], list)):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be a list of nurses ids'})
+    
+    # Verifying all nurses ids
+    for i, (id) in enumerate(payload['nurses']):
+        if(not isinstance(id, int)):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'id N:{i} of nurses ids should be an integer'})
     
     # Extract data from payload
-    patient_id = payload['patient_id']
     surgery_date = payload['surgery_date']
     operating_room = payload['operating_room']
+    sur_cost = payload['sur_cost']
     surgery_type_id = payload['surgery_type_id']
-    equip_id = payload['equip_id']
+    doctor_id = payload['doctor_id']
+    nurses = payload['nurses']
+    
+    
+    check_hosp_reg = '''
+                     SELECT *
+                     FROM hospitalization
+                     WHERE registration_registration_id = %s
+                     '''
+    
+    equip_id = 0
+    queries = [
+                ['equip', '(doctor_employee_person_cc)', '(%s)', (doctor_id,), 'equip_id'],
+                ['surgery', '(cost, date, operating_room, surgerytype_sur_type_id, equip_equip_id, hospitalization_registration_registration_id)', '(%s, %s, %s, %s, %s, %s)', [sur_cost, surgery_date, operating_room, surgery_type_id, equip_id, hospitalization_id], 'sur_id']
+              ]
+
+    for nurse_id in nurses:
+        queries.append(['nurse_equip', '(nurse_employee_person_cc, equip_equip_id)', '(%s, %s)', [nurse_id, equip_id], None])
 
     # Connect to database
     db = db_connect()
     cursor = db.cursor()
 
     try:
+        cursor.execute("BEGIN")
+        
         # Check if hospitalization exists
-        cursor.execute("SELECT * FROM hospitalization WHERE registration_registration_id = %s", (hospitalization_id,))
+        cursor.execute(check_hosp_reg, (hospitalization_id,))
         if cursor.fetchone() is None:
             return jsonify({'status': StatusCodes['api_error'], 'results': 'Invalid hospitalization_id'})
         
-        # Insert surgery into surgery table
-        cursor.execute("""
-            INSERT INTO surgery (date, operating_room, surgerytype_sur_type_id, equip_equip_id, hospitalization_registration_registration_id)
-            VALUES (%s, %s, %s, %s, %s)
-            RETURNING sur_id
-        """, (surgery_date, operating_room, surgery_type_id, equip_id, hospitalization_id))
-        surgery_id = cursor.fetchone()[0]
+        for i, (table, columns, values_placeholders, values, returns) in enumerate(queries):
+            if(returns == None): 
+                statement = f'''
+                             INSERT INTO {table} {columns}
+                             VALUES {values_placeholders};
+                             '''
+            else:
+                statement = f'''
+                             INSERT INTO {table} {columns}
+                             VALUES {values_placeholders}
+                             RETURNING {returns};
+                             '''
+            cursor.execute(statement, tuple(values))
+            if(i == 0):
+                equip_id = cursor.fetchone()[0]
+                queries[1][3][4] = equip_id
+                for j, nurse_id in enumerate(nurses):
+                    queries[2+j][3] = [nurse_id, equip_id]
+            elif(i == 1):
+                surgery_id = cursor.fetchone()[0]
 
         db.commit()
         
