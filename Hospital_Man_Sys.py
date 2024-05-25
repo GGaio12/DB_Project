@@ -852,14 +852,16 @@ def add_prescription():
     
     queries = [('prescription', '(validity)', '%s', [payload['validity']])]
     
+    savepoint_set = False
+    
     # Connecting to Data Base
     db = db_connect()
     cursor = db.cursor()
-    saved = False
     
     try:
-        cursor.execute("BEGIN")
-        cursor.execute("SAVEPOINT no_db_modifications")
+        cursor.execute("BEGIN;")
+        cursor.execute("SAVEPOINT no_db_modifications;")
+        savepoint_set = True
         
         # Check if event_id exists
         cursor.execute(statements['max_event_type_id'])
@@ -868,7 +870,7 @@ def add_prescription():
             return jsonify({'status': StatusCodes['api_error'], 'results': 'Event id does not exist'})
 
         # Getting registration id of the event
-        cursor.execute(statements['get_reg_id'], str(payload['event_id']))
+        cursor.execute(statements['get_reg_id'], (str(payload['event_id']),))
         reg_id = cursor.fetchone()[0]
         
         # Getting new prescription_id
@@ -888,7 +890,7 @@ def add_prescription():
         if(payload['type'] == 'appointment'):
             queries.append(('appointment_prescription', '(appointment_registration_registration_id, prescription_prescription_id)', '%s, %s', [reg_id, pres_id]))
         else:
-            queries.append(('hospitalization_prescription', '(hospitalization_registration_registration_id, prescription_prescription_id)', '%s, %s', [payload['event_id'], pres_id]))
+            queries.append(('hospitalization_prescription', '(hospitalization_registration_registration_id, prescription_prescription_id)', '%s, %s', [reg_id, pres_id]))
     
         # Executting all queries to insert elements in tables
         for table, columns, values_placeholders, values in queries:
@@ -898,22 +900,19 @@ def add_prescription():
                         ON CONFLICT DO NOTHING;
                         '''
             cursor.execute(statement, values)
-            if(table == 'medicine'):
-                db.commit()
-                saved = True
-                cursor.execute("BEGIN")
-        
+            
         db.commit()
+        savepoint_set = False
         response = {'status': StatusCodes['success'], 'results': {'prescription_id': pres_id}}
 
     except(Exception, psycopg2.DatabaseError) as error:
         logging.error(f'POST /dbproj/prescription/ - error: {error}')
         response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
-        if(db is not None):
+        if savepoint_set:
+            cursor.execute("ROLLBACK TO SAVEPOINT no_db_modifications;")
+        else:
             db.rollback()
-        if(saved):
-            cursor.execute("ROLLBACK TO SAVEPOINT no_db_modifications")
-
+        
     finally:
         if(db is not None):
             db.close()
@@ -922,7 +921,10 @@ def add_prescription():
 
 ##
 ## Execute a payment of an existing bill inserting the data:
-##  --> TODOO!!!
+## 'amount', 'type'
+## NOTE:
+##      'amount' has to be a positive number.
+##      'type' --> string
 ##
 @app.route('/dbproj/bills/<registration_id>', methods=['POST'])
 @jwt_required()
@@ -972,10 +974,9 @@ def pay_bill(registration_id):
     cursor = db.cursor()
 
     try:
-        cursor.execute('BEGIN')
+        cursor.execute('BEGIN;')
         
-        # SE EXISTE
-        # SE PERTENCE AO RESPETIVO ID
+        # Check if the bill exists and belongs to the patient
         cursor.execute(statement, values)
         bill_info = cursor.fetchone()
         
@@ -994,7 +995,7 @@ def pay_bill(registration_id):
                     '''
         values = (registration_id,)
         
-        # VERIFCAR VALOR PAGO
+        # Verify paid amount
         cursor.execute(statement, values)
        
         total_paid = cursor.fetchone()[0]
@@ -1002,7 +1003,7 @@ def pay_bill(registration_id):
         if(total_paid + amount > bill_amount):
             amount = bill_amount - total_paid
 
-        #PROCESSAR PAGAMENTO   
+        # Process payment   
         statement = '''
                     INSERT INTO payment (amount, type, registration_registration_id)
                     VALUES (%s, %s, %s)
@@ -1012,7 +1013,7 @@ def pay_bill(registration_id):
         cursor.execute(statement, values)
         payment_id = cursor.fetchone()[0]
         
-        # MUDAR bill_payed PARA TRUE
+        # Changes bill status
         if total_paid + amount >= bill_amount:
             statement = '''
                         UPDATE registration
@@ -1183,18 +1184,34 @@ def list_daily_summary(year_month_day):
         return jsonify({'status': StatusCodes['api_error'], 'results': f'Date in URL not correct. USE format: YYYY-MM-DD'})
     
     statement = '''
+                WITH SurgeryCosts AS (
+                    SELECT
+                        SUM(cost) AS total_surgery_cost,
+                        COUNT(sur_id) AS surgery_count
+                    FROM surgery
+                    WHERE date::date = %(date)s
+                ),
+                HospitalizationCosts AS (
+                    SELECT
+                        SUM(cost) AS total_hospitalization_cost,
+                        COUNT(hosp_id) AS hospitalization_count
+                    FROM hospitalization
+                    WHERE date::date = %(date)s
+                ),
+                PrescriptionCount AS (
+                    SELECT COUNT(DISTINCT pres.prescription_id) AS prescription_count
+                    FROM prescription pres
+                    INNER JOIN hospitalization_prescription hosp_pres ON pres.prescription_id = hosp_pres.prescription_prescription_id
+                    INNER JOIN hospitalization hosp ON hosp_pres.hospitalization_registration_registration_id = hosp.registration_registration_id
+                    WHERE pres.emission_date::date = %(date)s
+                )
                 SELECT
-                    SUM(bill) AS "Total Registed Bill",
-                    SUM(amount) AS "Total Ammount Payed",
-                    COUNT(sur_id) AS "Total Agended Surgeries",
-                    COUNT(prescription_prescription_id) AS "Total Prescriptions Writed"
-                FROM hospitalization AS hos
-                LEFT JOIN registration AS reg ON reg.registration_id = hos.registration_registration_id
-                LEFT JOIN payment AS pay ON reg.registration_id = pay.registration_registration_id
-                LEFT JOIN surgery AS sur ON reg.registration_id = sur.hospitalization_registration_registration_id
-                LEFT JOIN hospitalization_prescription AS hosp_pres ON hos.registration_registration_id = hosp_pres.hospitalization_registration_registration_id
-                WHERE DATE(reg.regist_date) = %s;
+                    total_surgery_cost + total_hospitalization_cost AS total_cost,
+                    surgery_count,
+                    prescription_count
+                FROM SurgeryCosts, HospitalizationCosts, PrescriptionCount;
                 '''
+    params = {'date': year_month_day}
     
     # Connecting to Data Base
     db = db_connect()
@@ -1202,19 +1219,17 @@ def list_daily_summary(year_month_day):
     
     try:
         # Executing the query
-        cursor.execute(statement, (year_month_day,))
+        cursor.execute(statement, params)
         result = cursor.fetchall()
         
         if result:
-            total_registered_bill = result[0][0] if result[0][0] is not None else 0
-            total_amount_paid = result[0][1] if result[0][1] is not None else 0
-            total_agended_surgeries = result[0][2] if result[0][2] is not None else 0
-            total_prescriptions_writed = result[0][3] if result[0][3] is not None else 0
+            total_amount_paid = result[0][0] if result[0][0] is not None else 0
+            total_agended_surgeries = result[0][1] if result[0][1] is not None else 0
+            total_prescriptions_writed = result[0][2] if result[0][2] is not None else 0
         else:
-            total_registered_bill = total_amount_paid = total_agended_surgeries = total_prescriptions_writed = 0
+            total_amount_paid = total_agended_surgeries = total_prescriptions_writed = 0
         
         response = {'status': StatusCodes['success'], 'results': {
-                    'Total Registed Bill': total_registered_bill,
                     'Total Ammount Payed': total_amount_paid,
                     'Total Agended Surgeries': total_agended_surgeries,
                     'Total Prescriptions Writed': total_prescriptions_writed
@@ -1225,7 +1240,7 @@ def list_daily_summary(year_month_day):
         response = {'status': StatusCodes['internal_error'], 'errors': str(error)}
 
     finally:
-        if db is not None:
+        if(db is not None):
             db.close()
 
     return jsonify(response)

@@ -100,6 +100,7 @@ CREATE TABLE registration (
 
 CREATE TABLE prescription (
 	prescription_id SERIAL,
+	emission_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	validity	DATE NOT NULL,
 	PRIMARY KEY(prescription_id)
 );
@@ -251,6 +252,24 @@ CREATE TRIGGER hospitalization_insert
 AFTER INSERT ON hospitalization
 FOR EACH ROW
 EXECUTE FUNCTION update_registration();
+
+CREATE INDEX idx_user_cc ON person(cc);
+
+CREATE INDEX idx_patient_person_cc ON patient(person_cc);
+
+CREATE INDEX idx_employee_person_cc ON employee(person_cc);
+
+CREATE INDEX idx_appointment_date ON appointment(appoint_date);
+CREATE INDEX idx_appointment_registration ON appointment(registration_registration_id);
+
+CREATE INDEX idx_prescription_emission_date ON prescription(emission_date);
+CREATE INDEX idx_appointment_prescription ON appointment_prescription(appointment_registration_registration_id);
+CREATE INDEX idx_hospitalization_prescription ON hospitalization_prescription(hospitalization_registration_registration_id);
+
+CREATE INDEX idx_hospitalization_date ON hospitalization(date);
+CREATE INDEX idx_hospitalization_registration ON hospitalization(registration_registration_id);
+CREATE INDEX idx_surgery_date ON surgery(date);
+CREATE INDEX idx_surgery_registration ON surgery(hospitalization_registration_registration_id);
 ''')
 
 db.commit()
