@@ -928,44 +928,55 @@ def add_prescription():
 @jwt_required()
 @roles_required('patient')
 def pay_bill(registration_id):
-    logger.info(f'POST /dbproj/bills/{registration_id}')
+    logger.info(f'POST /dbproj/bills/<registration_id>')
+    logger.debug(f'POST /dbproj/bills/<registration_id> - registration_id: {registration_id}')
     
     # Getting json payload
     payload = request.get_json()
-    logger.debug(f'POST /dbproj/bills/{registration_id} - payload: {payload}')
+    logger.debug(f'POST /dbproj/bills/<registration_id> - payload: {payload}')
     
     # Required fields for payment
     required_fields = ['amount', 'type']
     
     # Verifying required fields in payload
     for field in required_fields:
-        if field not in payload:
+        if(field not in payload):
             return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} not in payload'})
-
+        if(field == 'type' and not isinstance(payload[field], str)):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be a string'})
+        if(field == 'amount' and not isinstance(payload[field], int)):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be an integer'})
+    
     amount = payload['amount']
     payment_type = payload['type']
     
     # Ensure amount is a positive number
-    if amount <= 0:
+    if(amount <= 0):
         return jsonify({'status': StatusCodes['api_error'], 'results': 'Amount must be greater than zero'})
+    
+    if(payment_type not in ['Numerário', 'Cartão']):
+        return jsonify({'status': StatusCodes['api_error'], 'results': 'type must be "Numerário" or "Cartão"'})
+    
+    identity = get_jwt_identity()
+    
+    statement = '''
+                    SELECT bill, bill_payed
+                    FROM registration
+                    WHERE registration_id = %s
+                    AND patient_person_cc = %s
+                    '''
+    values = (registration_id, identity['id'])
     
     # Connecting to Data Base
     db = db_connect()
     cursor = db.cursor()
 
     try:
+        cursor.execute('BEGIN')
+        
         # SE EXISTE
         # SE PERTENCE AO RESPETIVO ID
-        identity = get_jwt_identity()
-        statement = '''
-                    SELECT bill, bill_payed
-                    FROM registration
-                    WHERE registration_id = %s
-                    AND patient_person_cc = %s
-                    '''
-        values = (registration_id, identity['id'])
         cursor.execute(statement, values)
-        
         bill_info = cursor.fetchone()
         
         if not bill_info:
@@ -976,33 +987,40 @@ def pay_bill(registration_id):
         if bill_payed:
             return jsonify({'status': StatusCodes['api_error'], 'results': 'Bill is already paid'})
         
-        # VERIFCAR VALOR PAGO
-        cursor.execute("""
-            SELECT COALESCE(SUM(amount), 0)
-            FROM payment
-            WHERE registration_registration_id = %s
-        """, (registration_id,))
+        statement = '''
+                    SELECT COALESCE(SUM(amount), 0)
+                    FROM payment
+                    WHERE registration_registration_id = %s
+                    '''
+        values = (registration_id,)
         
+        # VERIFCAR VALOR PAGO
+        cursor.execute(statement, values)
+       
         total_paid = cursor.fetchone()[0]
+
         if(total_paid + amount > bill_amount):
             amount = bill_amount - total_paid
-                
-        #PROCESSAR PAGAMENTO
-        cursor.execute("""
-            INSERT INTO payment (amount, type, registration_registration_id)
-            VALUES (%s, %s, %s)
-            RETURNING payment_id
-        """, (amount, payment_type, registration_id))
-        
+
+        #PROCESSAR PAGAMENTO   
+        statement = '''
+                    INSERT INTO payment (amount, type, registration_registration_id)
+                    VALUES (%s, %s, %s)
+                    RETURNING payment_id
+                    ''' 
+        values = (amount, payment_type, registration_id)
+        cursor.execute(statement, values)
         payment_id = cursor.fetchone()[0]
         
         # MUDAR bill_payed PARA TRUE
-        if total_paid >= bill_amount:
-            cursor.execute("""
-                UPDATE registration
-                SET bill_payed = TRUE
-                WHERE registration_id = %s
-            """, (registration_id,))
+        if total_paid + amount >= bill_amount:
+            statement = '''
+                        UPDATE registration
+                        SET bill_payed = TRUE
+                        WHERE registration_id = %s
+                        '''
+            values = (registration_id,)
+            cursor.execute(statement, values)
         
         db.commit()
         

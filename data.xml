@@ -444,7 +444,7 @@
     <payment>
         <row>
             <type>Cartão</type>
-            <amount>300</amount>
+            <amount>10</amount>
             <registration_registration_id>1</registration_registration_id>
         </row>
         <row>
