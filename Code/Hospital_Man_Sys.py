@@ -66,17 +66,54 @@ def is_valid_timestamp_date(timestamp_date_string):
 @app.route('/')
 def landing_page():
     return """
-    Faculdade de Ciencias e Tecnologias da Universidade de Coimbra - FCTUC <br/>
-    Departamento de Engenharia Informática - DEI <br/>
-    <br/>
-    Data Bases Project  <br/>
-    Hospital Management System <br/>
-    <br/>
-    Gonçalo José Carrajola Gaio  Nº: 2022224905 <br/>
-    João Ricardo Teixeira Gaspar Madeira  Nº: 2022200648 <br/>
-    Rodrigo Carvalho dos Santos  Nº: 2022218283 <br/>
-    <br/>
-    Coimbra 2024 <br/>
+    <head>
+        <style>
+            body {
+                text-align: center;
+                font-family: "Times New Roman", Arial, Helvetica, sans-serif;
+                margin-top: 50px;
+                margin-bottom: 50px;
+                margin-right: 210px;
+                margin-left: 210px;
+                border-style: solid;
+                border-color: rgb(0, 0, 0);
+                color: black;
+                padding: 30px;
+                font-size: 15px;
+            }
+            
+            h1 {
+                font-size: 18px;
+            }
+            
+            h2 {
+                font-size: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>
+            Faculdade de Ciências e Tecnologias da Universidade de Coimbra - FCTUC 
+            <br/>
+            Departamento de Engenharia Informática - DEI
+        </h1>
+        <br/>
+        <br/>
+        <h2>
+            Data Bases Project  <br/>
+            Hospital Management System <br/>
+        </h2>
+        <br/>
+        <br/>
+        <br/>
+        <br/>
+        Gonçalo José Carrajola Gaio  Nº: 2022224905 <br/>
+        João Ricardo Teixeira Gaspar Madeira  Nº: 2022200648 <br/>
+        Rodrigo Carvalho dos Santos  Nº: 2022218283 <br/>
+        <br/>
+        <br/>
+        Coimbra 2024 <br/>
+    </body>
     """
     
 ##

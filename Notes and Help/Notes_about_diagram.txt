@@ -1,0 +1,12 @@
+In registration table the default value of date is CURRENT_DATE
+In prescription table the default value of date is CURRENT_DATE
+
+'sur_date' and 'hosp_date', in code, have only the name 'date'
+
+In physical, table specialization_specialization changed to sup_specialization
+
+To help bill update was created a trigger that for each new appointment,
+hospitalization and/or surgery the updates the bill.
+
+For faster searches, and thinking about huge amount of data, was implemented
+some indexes in some of the most communly used columns of tables.

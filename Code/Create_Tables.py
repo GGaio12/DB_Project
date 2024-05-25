@@ -64,7 +64,7 @@ CREATE TABLE hospitalization (
 
 CREATE TABLE surgery (
 	sur_id					 SERIAL,
- 	cost			DOUBLE PRECISION,
+ 	cost			DOUBLE PRECISION NOT NULL,
 	date					TIMESTAMP NOT NULL,
 	operating_room				 VARCHAR(512) NOT NULL,
 	surgerytype_sur_type_id			 INTEGER NOT NULL,
@@ -75,7 +75,7 @@ CREATE TABLE surgery (
 
 CREATE TABLE appointment (
 	appoint_id		 SERIAL,
-	cost			DOUBLE PRECISION,
+	cost			DOUBLE PRECISION NOT NULL,
 	appoint_date	TIMESTAMP NOT NULL,
 	equip_equip_id		 INTEGER NOT NULL,
 	registration_registration_id INTEGER,
@@ -123,8 +123,8 @@ CREATE TABLE sideefect (
 
 CREATE TABLE payment (
 	payment_id		 SERIAL,
-	amount			DOUBLE PRECISION,
-	type			 VARCHAR(512),
+	amount			DOUBLE PRECISION NOT NULL,
+	type			 VARCHAR(512) NOT NULL,
 	registration_registration_id INTEGER,
 	PRIMARY KEY(payment_id,registration_registration_id)
 );

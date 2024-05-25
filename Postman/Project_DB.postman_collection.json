@@ -7,6 +7,37 @@
 	},
 	"item": [
 		{
+			"name": "LANDPAGE",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"cc\": 20,\r\n    \"name\": \"João Silva\",\r\n    \"birthdate\": \"1990-10-12\",\r\n    \"email\": \"joaosilva@mail.com\",\r\n    \"password\": \"9956\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "CREATE NEW PATIENT",
 			"request": {
 				"method": "POST",
@@ -43,7 +74,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"cc\": 21,\r\n    \"name\": \"Joana Marques\",\r\n    \"birthdate\": \"1983-09-24\",\r\n    \"email\": \"joanamarques@mail.com\",\r\n    \"password\": \"9986\",\r\n    \"start_date\": \"2024-01-01\",\r\n    \"end_date\": \"2026-01-01\",\r\n    \"sal\": 19200,\r\n    \"work_hours\": 40\r\n}",
+					"raw": "{\r\n    \"cc\": 21,\r\n    \"name\": \"Joana Marques\",\r\n    \"birthdate\": \"1983-09-24\",\r\n    \"email\": \"joanamarques@mail.com\",\r\n    \"password\": \"9986\",\r\n    \"start_date\": \"2024-01-01\",\r\n    \"end_date\": \"2026-01-01\",\r\n    \"sal\": 19200,\r\n    \"work_hours\": 40,\r\n    \"rank\": 2\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -331,6 +362,15 @@
 			"request": {
 				"method": "POST",
 				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"assistant_id\": 4,\r\n    \"cost\": 40,\r\n    \"appoint_date\": \"2024-11-06 11:30:00\",\r\n    \"doctor_id\": 9,\r\n    \"nurses\":[5]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
 				"url": {
 					"raw": "http://localhost:8080/dbproj/appointment",
 					"protocol": "http",
@@ -374,7 +414,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"patient_id\": 1, \r\n    \"hosp_cost\": 50,\r\n    \"hosp_date\": \"2024-05-20 10:15:00\",\r\n    \"hosp_room_num\": 105,\r\n    \"hosp_nurse_id\": 2,\r\n    \"sur_cost\": 400,\r\n    \"operating_room\": \"OR4\",\r\n    \"surgery_type_id\": 2,\r\n    \"doctor_id\": 3,\r\n    \"surgery_date\": \"2024-11-03\",\r\n    \"nurses\": [2, 5]\r\n}",
+					"raw": "{\r\n    \"patient_id\": 1, \r\n    \"hosp_cost\": 50,\r\n    \"hosp_date\": \"2024-05-25 10:15:00\",\r\n    \"hosp_room_num\": 105,\r\n    \"hosp_nurse_id\": 2,\r\n    \"sur_cost\": 400,\r\n    \"operating_room\": \"OR4\",\r\n    \"surgery_type_id\": 2,\r\n    \"doctor_id\": 3,\r\n    \"surgery_date\": \"2024-05-25\",\r\n    \"nurses\": [2, 5]\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -514,7 +554,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \r\n}",
+					"raw": "{\r\n    \"amount\": 40,\r\n    \"type\": \"Cartão\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -563,7 +603,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8080/dbproj/daily/2024-05-22",
+					"raw": "http://localhost:8080/dbproj/daily/2024-05-25",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -572,7 +612,7 @@
 					"path": [
 						"dbproj",
 						"daily",
-						"2024-05-22"
+						"2024-05-25"
 					]
 				}
 			},
