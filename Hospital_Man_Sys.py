@@ -985,9 +985,8 @@ def pay_bill(registration_id):
         
         total_paid = cursor.fetchone()[0]
         if(total_paid + amount > bill_amount):
-            return
-        
-        
+            amount = bill_amount - total_paid
+                
         #PROCESSAR PAGAMENTO
         cursor.execute("""
             INSERT INTO payment (amount, type, registration_registration_id)
@@ -997,7 +996,7 @@ def pay_bill(registration_id):
         
         payment_id = cursor.fetchone()[0]
         
-        # mUDAR bill_payed PARA TRUE
+        # MUDAR bill_payed PARA TRUE
         if total_paid >= bill_amount:
             cursor.execute("""
                 UPDATE registration
