@@ -128,9 +128,11 @@
     </employee>
     <nurse>
         <row>
+            <nurserank_rank_id>2</nurserank_rank_id>
             <employee_person_cc>2</employee_person_cc>
         </row>
         <row>
+            <nurserank_rank_id>1</nurserank_rank_id>
             <employee_person_cc>5</employee_person_cc>
         </row>
     </nurse>
@@ -221,12 +223,14 @@
             <low_specialization_spec_id>1</low_specialization_spec_id>
         </row>
     </sup_specialization>
-    <sup_nurse>
+    <nurserank>
         <row>
-            <nurse_employee_person_cc>5</nurse_employee_person_cc>
-            <low_nurse_employee_person_cc>2</low_nurse_employee_person_cc>
+            <rank>1</rank>
         </row>
-    </sup_nurse>
+        <row>
+            <rank>2</rank>
+        </row>
+    </nurserank>
     
     <!-- ***********************************
          *          REGITS INFOS           *

@@ -82,13 +82,13 @@ def landing_page():
 ##
 ## Creates a new individual of type <type> inserting the data:
 ## Patient:   'cc', 'name', 'birthdate', 'email', 'password'
-## Nuser:     'cc', 'name', 'birthdate', 'email', 'password', 'start_date', 'end_date', 'sal', 'work_hours'
 ## Assistant: 'cc', 'name', 'birthdate', 'email', 'password', 'start_date', 'end_date', 'sal', 'work_hours'
+## Nuser:     'cc', 'name', 'birthdate', 'email', 'password', 'start_date', 'end_date', 'sal', 'work_hours', 'rank'
 ## Doctor:    'cc', 'name', 'birthdate', 'email', 'password', 'start_date', 'end_date', 'sal', 'work_hours', 'medical_license', 'spec_name'
 ## NOTE 
 ##      Dates have to be in YYYY-MM-DD format.
 ##      'name', 'birthdate', 'email', 'password', 'start_date', 'end_date', 'medical_license', 'spec_name' --> strings
-##      'cc', 'sal', 'work_hours' --> integers
+##      'cc', 'sal', 'work_hours', 'rank' --> integers
 ##
 @app.route('/dbproj/register/<type>', methods=['POST'])
 def insert_type(type):
@@ -103,6 +103,7 @@ def insert_type(type):
     # Fields that have to be in payload
     required_fields = ['cc', 'name', 'birthdate', 'email', 'password'] # Commun fields
     employee_fields = ['start_date', 'end_date', 'sal', 'work_hours']  # Only employee fields
+    nurse_fields = ['rank']                                            # Only nurse fields
     doctor_fields = ['medical_license', 'spec_name']                   # Only doctor fields
 
     # Verifying commun fields
@@ -128,11 +129,18 @@ def insert_type(type):
                 if(not isinstance(payload[field], str) or not is_valid_date(payload[field])):
                     return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be a valid date string in YYYY-MM-DD format'})
 
-        if(type == 'doctor'):
+        if(type == 'nurse'):
+            # Verifying only nurse fields
+            for field in nurse_fields:
+                if(field not in payload or not isinstance(payload[field], int)):
+                    return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be an integer'})
+        elif(type == 'doctor'):
             # Verifying only doctor fields
             for field in doctor_fields:
                 if(field not in payload or not isinstance(payload[field], str)):
                     return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be a string'})
+    elif(type != 'patient'):
+        return jsonify({'status': StatusCodes['api_error'], 'results': f'type should be "patient", "nurse", "doctor" or "assistant"'})
     
     # Initializing commun fields values (hashing password)
     cc = payload['cc']
@@ -147,7 +155,10 @@ def insert_type(type):
         # Adding employee-related queries
         queries.append(('employee', '(person_cc)', '%s', (cc,)))
         
-        if(type == 'doctor'):
+        if(type == 'nurse'):
+            # Adding nurse-specific queries
+            queries.append((type, '(employee_person_cc, nurserank_rank_id)', '%s, %s', (cc, payload['rank'])))
+        elif(type == 'doctor'):
             # Adding doctor-specific queries
             queries.append((type, '(employee_person_cc, medical_license)', '%s, %s', (cc, payload['medical_license'])))
             queries.append(('specialization', '(name, doctor_employee_person_cc)', '%s, %s', (payload['spec_name'], cc)))
@@ -385,7 +396,6 @@ def schedule_appointment():
     
     return jsonify(response)
 
-    
 ##
 ## Get appointments information. Lists all appointments and
 ## their detailed info by giving the patient_user_id in url.

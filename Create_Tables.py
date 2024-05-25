@@ -9,7 +9,7 @@ patient, person, nurse, doctor, assistant, employee, hospitalization,
 surgery, appointment, equip, registration, prescription, medicine, 
 sideefect, payment, specialization, contract, surgerytype, 
 sup_specialization, medicine_prescription, appointment_prescription, 
-hospitalization_prescription, nurse_equip, sup_nurse;
+hospitalization_prescription, nurse_equip, nurserank;
                
 CREATE TABLE patient (
 	patient_id SERIAL,
@@ -28,6 +28,7 @@ CREATE TABLE person (
 
 CREATE TABLE nurse (
 	nurse_id		 SERIAL,
+ 	nurserank_rank_id INTEGER NOT NULL,
 	employee_person_cc INTEGER,
 	PRIMARY KEY(employee_person_cc)
 );
@@ -181,14 +182,15 @@ CREATE TABLE nurse_equip (
 	PRIMARY KEY(nurse_equip_id)
 );
 
-CREATE TABLE sup_nurse (
-	nurse_employee_person_cc	 INTEGER,
-	low_nurse_employee_person_cc INTEGER NOT NULL,
-	PRIMARY KEY(nurse_employee_person_cc)
+CREATE TABLE nurserank (
+	rank_id SERIAL,
+	rank	 INTEGER NOT NULL,
+	PRIMARY KEY(rank_id)
 );
 
 ALTER TABLE patient ADD CONSTRAINT patient_fk1 FOREIGN KEY (person_cc) REFERENCES person(cc);
 ALTER TABLE nurse ADD CONSTRAINT nurse_fk1 FOREIGN KEY (employee_person_cc) REFERENCES employee(person_cc);
+ALTER TABLE nurse ADD CONSTRAINT nurse_fk2 FOREIGN KEY (nurserank_rank_id) REFERENCES nurserank(rank_id);
 ALTER TABLE doctor ADD CONSTRAINT doctor_fk1 FOREIGN KEY (employee_person_cc) REFERENCES employee(person_cc);
 ALTER TABLE assistant ADD CONSTRAINT assistant_fk1 FOREIGN KEY (employee_person_cc) REFERENCES employee(person_cc);
 ALTER TABLE employee ADD CONSTRAINT employee_fk1 FOREIGN KEY (person_cc) REFERENCES person(cc);
@@ -216,8 +218,7 @@ ALTER TABLE hospitalization_prescription ADD CONSTRAINT hospitalization_prescrip
 ALTER TABLE hospitalization_prescription ADD CONSTRAINT hospitalization_prescription_fk2 FOREIGN KEY (prescription_prescription_id) REFERENCES prescription(prescription_id);
 ALTER TABLE nurse_equip ADD CONSTRAINT nurse_equip_fk1 FOREIGN KEY (nurse_employee_person_cc) REFERENCES nurse(employee_person_cc);
 ALTER TABLE nurse_equip ADD CONSTRAINT nurse_equip_fk2 FOREIGN KEY (equip_equip_id) REFERENCES equip(equip_id);
-ALTER TABLE sup_nurse ADD CONSTRAINT sup_nurse_fk1 FOREIGN KEY (nurse_employee_person_cc) REFERENCES nurse(employee_person_cc);
-ALTER TABLE sup_nurse ADD CONSTRAINT sup_nurse_fk2 FOREIGN KEY (low_nurse_employee_person_cc) REFERENCES nurse(employee_person_cc);
+ALTER TABLE nurserank ADD UNIQUE (rank);
 
 CREATE OR REPLACE FUNCTION update_registration() RETURNS TRIGGER AS $$
 BEGIN
