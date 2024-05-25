@@ -272,9 +272,16 @@ def authenticate_user():
 
     return jsonify(response)
 
-## the data:  --> TODOO!!!
 ##
-## MADEIRA
+## Schedule a new appointment inserting the data:
+## 'assistant_id', 'cost', 'appoint_date', 'doctor_id', 'nurses'
+## NOTE 
+##      'appoint_date' have to be in 'YYYY-MM-DD HH:MM:SS' format.
+##      'appoint_date' --> strings
+##      'assistant_id', 'doctor_id' --> integers
+##      'cost' --> integers or floats
+##      'nurses' --> list of integers
+##
 @app.route('/dbproj/appointment', methods=['POST'])
 @jwt_required()
 @roles_required('patient')
@@ -286,52 +293,51 @@ def schedule_appointment():
     logger.debug(f'POST /dbproj/appointment - payload: {payload}')
     
     # Required fields for scheduling an appointment
-    required_fields = ['appointment_date', 'bill', 'bill_payed', 'assistant_id', 'doctor_id', 'nurse_id']
+    required_fields = ['assistant_id', 'cost', 'appoint_date', 'doctor_id', 'nurses']
     
     # Verifying required fields in payload
     for field in required_fields:
-        if field not in payload:
+        if(field not in payload):
             return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} not in payload'})
-
-    appointment_date = payload['appointment_date']
-    bill = payload['bill']
-    bill_payed = payload['bill_payed']
-    assistant_id = payload['assistant_id']
-    doctor_id = payload['doctor_id']
-    nurse_id = payload['nurse_id']
+        if(field in ['assistant_id', 'doctor_id'] and not isinstance(payload[field], int)):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be an integer'})
+        if(field == 'appoint_date' and (not isinstance(payload[field], str) or not is_valid_timestamp_date(payload[field]))):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be a valid timestamp date string in "YYYY-MM-DD HH:MM:SS" format'})
+        if(field == 'cost' and (not isinstance(payload[field], float) and not isinstance(payload[field], int))):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be an integer or float'})
+        if(field == 'nurses' and not isinstance(payload[field], list)):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be a list of nurses ids'})
+        
+    # Ensure cost is a positive number
+    if(payload['cost'] < 0):
+        return jsonify({'status': StatusCodes['api_error'], 'results': 'Cost amount must be greater or equals to zero'}) 
+        
+    # Verifying all nurses ids
+    i = -1
+    for i, (id) in enumerate(payload['nurses']):
+        if(not isinstance(id, int)):
+            return jsonify({'status': StatusCodes['api_error'], 'results': f'id N:{i} of nurses ids should be an integer'})
+    if(i == -1):
+        return jsonify({'status': StatusCodes['api_error'], 'results': f'The nurses ids list need to have at least one nurse id'})
     
-    # Ensure bill is a positive number
-    if bill < 0:
-        return jsonify({'status': StatusCodes['api_error'], 'results': 'Bill amount must be greater or equals to zero'})
+    assistant_id = payload['assistant_id']
+    cost = payload['cost']
+    appoint_date = payload['appoint_date']
+    doctor_id = payload['doctor_id']
+    nurses = payload['nurses']
     
     # Get patient identity
     identity = get_jwt_identity()
+    
+    equip_id = registration_id = 0
+    queries = [
+                ['equip', '(doctor_employee_person_cc)', '(%s)', [doctor_id], 'equip_id'],
+                ['registration', '(assistant_employee_person_cc, patient_person_cc)', '(%s, %s)', [assistant_id, identity['id']], 'registration_id'],
+                ['appointment', '(cost, appoint_date, equip_equip_id, registration_registration_id)', '(%s, %s, %s, %s)', [cost, appoint_date, equip_id, registration_id], 'appoint_id']
+              ]
 
-    # Queries to insert into equip and nurse_equip tables
-    equip_query = '''
-                  INSERT INTO equip (doctor_employee_person_cc)
-                  VALUES (%s)
-                  RETURNING equip_id
-                  '''
-    nurse_equip_query = '''
-                        INSERT INTO nurse_equip (nurse_employee_person_cc, equip_equip_id)
-                        VALUES (%s, %s)
-                        '''
-    
-    # Insert into registration table
-    registration_query = '''
-                         INSERT INTO registration (bill, bill_payed, assistant_employee_person_cc, patient_person_cc)
-                         VALUES (%s, %s, %s, %s)
-                         RETURNING registration_id
-                         '''
-    registration_values = (bill, bill_payed, assistant_id, identity['id'])
-    
-    # Insert into appointment table
-    appointment_query = '''
-                        INSERT INTO appointment (appoint_date, registration_registration_id)
-                        VALUES (%s, %s)
-                        RETURNING appoint_id
-                        '''
+    for nurse_id in nurses:
+        queries.append(['nurse_equip', '(nurse_employee_person_cc, equip_equip_id)', '(%s, %s)', [nurse_id, equip_id], None])
     
     # Connecting to Data Base
     db = db_connect()
@@ -340,25 +346,32 @@ def schedule_appointment():
     try:
         cursor.execute("BEGIN")
         
-        # Insert into equip table and get equip_id
-        cursor.execute(equip_query, (doctor_id,))
-        equip_id = cursor.fetchone()[0]
-        
-        # Insert into nurse_equip table
-        cursor.execute(nurse_equip_query, (nurse_id, equip_id))
-        
-        # Insert into registration table and get registration_id
-        cursor.execute(registration_query, registration_values)
-        registration_id = cursor.fetchone()[0]
-        
-        # Insert into appointment table
-        appointment_values = (appointment_date, registration_id)
-        cursor.execute(appointment_query, appointment_values)
-        appointment_id = cursor.fetchone()[0]
+        for i, (table, columns, values_placeholders, values, returns) in enumerate(queries):
+            if(returns == None): 
+                statement = f'''
+                             INSERT INTO {table} {columns}
+                             VALUES {values_placeholders};
+                             '''
+            else:
+                statement = f'''
+                             INSERT INTO {table} {columns}
+                             VALUES {values_placeholders}
+                             RETURNING {returns};
+                             '''
+            cursor.execute(statement, tuple(values))
+            if(i == 0):
+                equip_id = cursor.fetchone()[0]
+                queries[2][3][2] = equip_id
+                for j, nurse_id in enumerate(nurses):
+                    queries[3+j][3] = [nurse_id, equip_id]
+            elif(i == 1):
+                queries[2][3][3] = cursor.fetchone()[0]
+            elif(i == 2):
+                appoint_id = cursor.fetchone()[0]
 
         db.commit()
         
-        response = {'status': StatusCodes['success'], 'results': {'appointment_id': appointment_id}}
+        response = {'status': StatusCodes['success'], 'results': {'appointment_id': appoint_id}}
         
     except (Exception, psycopg2.DatabaseError) as error:
         logger.error(f'POST /dbproj/appointment - error: {error}')
@@ -464,11 +477,18 @@ def schedule_new_surgery_nh():
             return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be a valid date string in YYYY-MM-DD format'})
         if(field == 'nurses' and not isinstance(payload[field], list)):
             return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be a list of nurses ids'})
-        
+    
+    # Ensure costs are positive numbers
+    if(payload['hosp_cost'] < 0 or payload['sur_cost'] < 0):
+        return jsonify({'status': StatusCodes['api_error'], 'results': 'Costs amounts must be greaters or equals to zero'}) 
+     
     # Verifying all nurses ids
+    i = -1
     for i, (id) in enumerate(payload['nurses']):
         if(not isinstance(id, int)):
             return jsonify({'status': StatusCodes['api_error'], 'results': f'id N:{i} of nurses ids should be an integer'})
+    if(i == -1):
+        return jsonify({'status': StatusCodes['api_error'], 'results': f'The nurses ids list need to have at least one nurse id'})
             
     # Extract data from payload
     patient_id = payload['patient_id']
@@ -496,7 +516,7 @@ def schedule_new_surgery_nh():
 
     for nurse_id in nurses:
         queries.append(['nurse_equip', '(nurse_employee_person_cc, equip_equip_id)', '(%s, %s)', [nurse_id, equip_id], None])
-
+    
     # Connect to database
     db = db_connect()
     cursor = db.cursor()
@@ -584,10 +604,17 @@ def schedule_new_surgery_h(hospitalization_id):
         if(field == 'nurses' and not isinstance(payload[field], list)):
             return jsonify({'status': StatusCodes['api_error'], 'results': f'{field} should be a list of nurses ids'})
     
+    # Ensure cost is a positive number
+    if(payload['sur_cost'] < 0):
+        return jsonify({'status': StatusCodes['api_error'], 'results': 'Cost amount must be greater or equals to zero'}) 
+    
     # Verifying all nurses ids
+    i = -1
     for i, (id) in enumerate(payload['nurses']):
         if(not isinstance(id, int)):
             return jsonify({'status': StatusCodes['api_error'], 'results': f'id N:{i} of nurses ids should be an integer'})
+    if(i == -1):
+        return jsonify({'status': StatusCodes['api_error'], 'results': f'The nurses ids list need to have at least one nurse id'})
     
     # Extract data from payload
     surgery_date = payload['surgery_date']
