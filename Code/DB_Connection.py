@@ -1,16 +1,12 @@
 import psycopg2
 
-#password = 'password'
-
 def db_connect():
     '''
     Creates and connects to the Data Base
     '''
-    decoded_pass = 0
     db = psycopg2.connect(
         user = 'projectuser',
-        password = 'password',
-        #password = int(decoded_pass),
+        password= 'password',
         host = '127.0.0.1',
         port = '5432',
         database = 'ProjectDB'
